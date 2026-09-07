@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { PrefsProvider } from "@/lib/prefs";
 
 function NotFoundComponent() {
   return (
@@ -110,6 +111,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const prefsBootScript = `try{var t=localStorage.getItem('barnmappen.theme');if(t==='dark'){document.documentElement.classList.add('dark')}var l=localStorage.getItem('barnmappen.lang');if(l==='sv'||l==='en'){document.documentElement.lang=l}}catch(e){}`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="sv">
@@ -117,6 +120,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: prefsBootScript }} />
         {children}
         <Scripts />
       </body>
@@ -147,10 +151,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthSync />
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster />
+      <PrefsProvider>
+        <AuthSync />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <Toaster />
+      </PrefsProvider>
     </QueryClientProvider>
   );
 }
