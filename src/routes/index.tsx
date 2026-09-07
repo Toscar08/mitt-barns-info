@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { FolderHeart, HeartPulse, FileText, ListChecks, Sparkles, Lock } from "lucide-react";
+import { FolderHeart, HeartPulse, FileText, Sparkles, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PrefToggles } from "@/components/PrefToggles";
@@ -107,9 +107,6 @@ function Landing() {
               <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
             </article>
           ))}
-          <span className="hidden">
-            <ListChecks aria-hidden />
-          </span>
         </section>
       </main>
     </div>
