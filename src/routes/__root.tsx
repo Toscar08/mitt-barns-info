@@ -110,6 +110,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const prefsBootScript = `try{var t=localStorage.getItem('barnmappen.theme');if(t==='dark'){document.documentElement.classList.add('dark')}var l=localStorage.getItem('barnmappen.lang');if(l==='sv'||l==='en'){document.documentElement.lang=l}}catch(e){}`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="sv">
@@ -117,6 +119,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: prefsBootScript }} />
         {children}
         <Scripts />
       </body>
