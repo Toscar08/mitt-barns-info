@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/barn/")({
   head: () => ({
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/barn/")({
 
 function ChildrenPage() {
   const queryClient = useQueryClient();
+  const { t, locale } = usePrefs();
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [adding, setAdding] = useState(false);
@@ -48,7 +50,7 @@ function ChildrenPage() {
     mutationFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) throw new Error("Du måste vara inloggad");
+      if (!userId) throw new Error(t("children.mustSignIn"));
       const { error } = await supabase.from("children").insert({
         user_id: userId,
         name: name.trim(),
@@ -61,7 +63,7 @@ function ChildrenPage() {
       setBirthDate("");
       setAdding(false);
       queryClient.invalidateQueries({ queryKey: ["children"] });
-      toast.success("Mappen är skapad");
+      toast.success(t("children.created"));
     },
     onError: (error) => toast.error(error.message),
   });
@@ -75,7 +77,7 @@ function ChildrenPage() {
       };
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId || !parsed.child?.["name"]) throw new Error("Filen kunde inte läsas");
+      if (!userId || !parsed.child?.["name"]) throw new Error(t("children.restoreFail"));
 
       const c = parsed.child;
       const { data: created, error } = await supabase
@@ -100,27 +102,27 @@ function ChildrenPage() {
           parsed.entries.map((e) => ({
             user_id: userId,
             child_id: created.id,
-            category: String(e["category"] ?? "allmant"),
-            title: String(e["title"] ?? "Utan titel"),
+            category: String(e["category"] ?? "custom"),
+            title: String(e["title"] ?? "—"),
             content: (e["content"] as string) ?? null,
           })),
         );
       }
       if (parsed.tasks?.length) {
         await supabase.from("tasks").insert(
-          parsed.tasks.map((t) => ({
+          parsed.tasks.map((t2) => ({
             user_id: userId,
             child_id: created.id,
-            title: String(t["title"] ?? "Utan titel"),
-            due_at: (t["due_at"] as string) ?? null,
-            done: Boolean(t["done"]),
+            title: String(t2["title"] ?? "—"),
+            due_at: (t2["due_at"] as string) ?? null,
+            done: Boolean(t2["done"]),
           })),
         );
       }
       queryClient.invalidateQueries({ queryKey: ["children"] });
-      toast.success("Barnmappen är återställd");
+      toast.success(t("children.restored"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Kunde inte återställa filen");
+      toast.error(error instanceof Error ? error.message : t("children.restoreFail"));
     }
   }
 
@@ -130,15 +132,13 @@ function ChildrenPage() {
       <main className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl">Mina barn</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Varje barn har sin egen mapp med information, dokument och uppgifter.
-            </p>
+            <h1 className="text-4xl">{t("children.title")}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{t("children.lead")}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => fileRef.current?.click()}>
               <Upload className="size-4" aria-hidden />
-              Återställ från fil
+              {t("children.restore")}
             </Button>
             <input
               ref={fileRef}
@@ -153,7 +153,7 @@ function ChildrenPage() {
             />
             <Button onClick={() => setAdding((v) => !v)}>
               <Plus className="size-4" aria-hidden />
-              Nytt barn
+              {t("children.new")}
             </Button>
           </div>
         </div>
@@ -167,17 +167,17 @@ function ChildrenPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="child-name">Barnets namn</Label>
+              <Label htmlFor="child-name">{t("children.name")}</Label>
               <Input
                 id="child-name"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="T.ex. Elsa"
+                placeholder={t("children.namePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="child-birth">Födelsedatum</Label>
+              <Label htmlFor="child-birth">{t("children.birth")}</Label>
               <Input
                 id="child-birth"
                 type="date"
@@ -186,21 +186,19 @@ function ChildrenPage() {
               />
             </div>
             <Button type="submit" disabled={addChild.isPending}>
-              Skapa mapp
+              {t("children.createFolder")}
             </Button>
           </form>
         )}
 
         <section className="mt-8 space-y-3">
           {children.isLoading && (
-            <p className="text-sm text-muted-foreground">Hämtar dina mappar…</p>
+            <p className="text-sm text-muted-foreground">{t("children.loading")}</p>
           )}
           {children.data?.length === 0 && !adding && (
             <div className="surface p-10 text-center">
-              <h2 className="text-2xl">Inga mappar än</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Skapa en mapp för ditt första barn för att komma igång.
-              </p>
+              <h2 className="text-2xl">{t("children.emptyTitle")}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{t("children.emptyText")}</p>
             </div>
           )}
           {children.data?.map((child) => (
@@ -214,8 +212,8 @@ function ChildrenPage() {
                 <span className="block text-xl">{child.name}</span>
                 <span className="block text-sm text-muted-foreground">
                   {child.birth_date
-                    ? `Född ${new Date(child.birth_date).toLocaleDateString("sv-SE")}`
-                    : "Födelsedatum saknas"}
+                    ? `${t("children.born")} ${new Date(child.birth_date).toLocaleDateString(locale)}`
+                    : t("children.noBirth")}
                 </span>
               </span>
               <ChevronRight className="size-5 text-muted-foreground" aria-hidden />
@@ -225,7 +223,7 @@ function ChildrenPage() {
 
         <p className="mt-10 flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-4" aria-hidden />
-          Din information är privat. Du kan säkerhetskopiera och exportera varje mapp.
+          {t("children.privacy")}
         </p>
       </main>
     </div>
