@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { askAssistant } from "@/lib/assistant.functions";
+import { usePrefs, type TranslationKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/barn/$childId")({
   head: () => ({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/barn/$childId")({
       {
         name: "description",
         content:
-          "All information om barnet: basinfo och hälsa, dokument, anteckningar, uppgifter och AI-assistent.",
+          "All information om barnet: personuppgifter, kontaktuppgifter, kalender och aktiviteter, dokument, egen information och AI-assistent.",
       },
       { property: "og:title", content: "Barnets mapp – Barnmappen" },
       { property: "og:description", content: "All information om barnet på ett ställe." },
@@ -46,6 +47,7 @@ function ChildFolder() {
   const { childId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t, locale } = usePrefs();
 
   const child = useQuery({
     queryKey: ["child", childId],
@@ -115,11 +117,11 @@ function ChildFolder() {
     link.download = `barnmapp-${child.data?.name ?? "barn"}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Säkerhetskopian är nedladdad");
+    toast.success(t("folder.backupDone"));
   }
 
   async function deleteChild() {
-    if (!window.confirm("Ta bort hela mappen och all information om barnet?")) return;
+    if (!window.confirm(t("folder.deleteConfirm"))) return;
     const { error } = await supabase.from("children").delete().eq("id", childId);
     if (error) {
       toast.error(error.message);
@@ -133,7 +135,9 @@ function ChildFolder() {
     return (
       <div className="min-h-screen">
         <AppHeader />
-        <p className="mx-auto max-w-5xl px-6 py-10 text-sm text-muted-foreground">Hämtar…</p>
+        <p className="mx-auto max-w-5xl px-6 py-10 text-sm text-muted-foreground">
+          {t("folder.loading")}
+        </p>
       </div>
     );
   }
@@ -143,9 +147,9 @@ function ChildFolder() {
       <div className="min-h-screen">
         <AppHeader />
         <div className="mx-auto max-w-5xl px-6 py-10">
-          <h1 className="text-3xl">Mappen finns inte</h1>
+          <h1 className="text-3xl">{t("folder.missing")}</h1>
           <Button asChild className="mt-4">
-            <Link to="/barn">Till mina barn</Link>
+            <Link to="/barn">{t("folder.toChildren")}</Link>
           </Button>
         </div>
       </div>
@@ -161,7 +165,7 @@ function ChildFolder() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" aria-hidden />
-          Mina barn
+          {t("nav.myChildren")}
         </Link>
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
@@ -169,43 +173,69 @@ function ChildFolder() {
             <h1 className="text-4xl">{child.data.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {child.data.birth_date
-                ? `Född ${new Date(child.data.birth_date).toLocaleDateString("sv-SE")}`
-                : "Födelsedatum saknas"}
+                ? `${t("children.born")} ${new Date(child.data.birth_date).toLocaleDateString(locale)}`
+                : t("children.noBirth")}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportFolder}>
               <Download className="size-4" aria-hidden />
-              Säkerhetskopiera
+              {t("folder.backup")}
             </Button>
             <Button variant="ghost" onClick={deleteChild}>
               <Trash2 className="size-4" aria-hidden />
-              Ta bort mapp
+              {t("folder.delete")}
             </Button>
           </div>
         </div>
 
         <Assistant childId={childId} childName={child.data.name} />
 
-        <Tabs defaultValue="info" className="mt-8">
-          <TabsList>
-            <TabsTrigger value="info">Basinfo & hälsa</TabsTrigger>
-            <TabsTrigger value="notes">Anteckningar</TabsTrigger>
-            <TabsTrigger value="tasks">Uppgifter</TabsTrigger>
-            <TabsTrigger value="docs">Dokument</TabsTrigger>
+        <Tabs defaultValue="person" className="mt-8">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="person">{t("tab.person")}</TabsTrigger>
+            <TabsTrigger value="contacts">{t("tab.contacts")}</TabsTrigger>
+            <TabsTrigger value="calendar">{t("tab.calendar")}</TabsTrigger>
+            <TabsTrigger value="documents">{t("tab.documents")}</TabsTrigger>
+            <TabsTrigger value="custom">{t("tab.custom")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="info">
+          <TabsContent value="person">
             <InfoForm child={child.data} />
           </TabsContent>
-          <TabsContent value="notes">
-            <Entries childId={childId} entries={entries.data ?? []} />
+          <TabsContent value="contacts">
+            <Entries
+              childId={childId}
+              category="contacts"
+              entries={(entries.data ?? []).filter((e) => e.category === "contacts")}
+              titlePlaceholder="contacts.titlePlaceholder"
+              contentPlaceholder="contacts.contentPlaceholder"
+            />
           </TabsContent>
-          <TabsContent value="tasks">
+          <TabsContent value="calendar">
+            <Entries
+              childId={childId}
+              category="calendar"
+              entries={(entries.data ?? []).filter((e) => e.category === "calendar")}
+              titlePlaceholder="calendar.titlePlaceholder"
+              contentPlaceholder="calendar.contentPlaceholder"
+            />
+            <h2 className="mt-8 text-2xl">{t("tasks.heading")}</h2>
             <TaskList childId={childId} tasks={tasks.data ?? []} />
           </TabsContent>
-          <TabsContent value="docs">
+          <TabsContent value="documents">
             <Documents childId={childId} documents={documents.data ?? []} />
+          </TabsContent>
+          <TabsContent value="custom">
+            <Entries
+              childId={childId}
+              category="custom"
+              entries={(entries.data ?? []).filter(
+                (e) => e.category !== "contacts" && e.category !== "calendar",
+              )}
+              titlePlaceholder="custom.titlePlaceholder"
+              contentPlaceholder="custom.contentPlaceholder"
+            />
           </TabsContent>
         </Tabs>
       </main>
@@ -227,6 +257,7 @@ type Child = {
 
 function Assistant({ childId, childName }: { childId: string; childName: string }) {
   const ask = useServerFn(askAssistant);
+  const { t, lang } = usePrefs();
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -237,10 +268,10 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
     setLoading(true);
     setAnswer(null);
     try {
-      const result = await ask({ data: { childId, question: question.trim() } });
+      const result = await ask({ data: { childId, question: question.trim(), lang } });
       setAnswer(result.answer);
     } catch {
-      toast.error("Assistenten kunde inte svara just nu");
+      toast.error(t("ai.error"));
     } finally {
       setLoading(false);
     }
@@ -250,21 +281,19 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
     <section className="surface mt-8 p-6">
       <h2 className="flex items-center gap-2 text-2xl">
         <Sparkles className="size-5 text-accent" aria-hidden />
-        Fråga om {childName}
+        {t("ai.heading")} {childName}
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Assistenten svarar utifrån det du själv har lagt in i mappen.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t("ai.lead")}</p>
       <form onSubmit={submit} className="mt-4 flex flex-wrap gap-2">
         <Input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="När börjar fotbollsträningen?"
+          placeholder={t("ai.placeholder")}
           className="min-w-56 flex-1"
         />
         <Button type="submit" disabled={loading}>
           <Send className="size-4" aria-hidden />
-          {loading ? "Tänker…" : "Fråga"}
+          {loading ? t("ai.thinking") : t("ai.ask")}
         </Button>
       </form>
       {answer && (
@@ -278,6 +307,7 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
 
 function InfoForm({ child }: { child: Child }) {
   const queryClient = useQueryClient();
+  const { t } = usePrefs();
   const [form, setForm] = useState({
     name: child.name,
     birth_date: child.birth_date ?? "",
@@ -285,7 +315,6 @@ function InfoForm({ child }: { child: Child }) {
     blood_type: child.blood_type ?? "",
     allergies: child.allergies ?? "",
     medications: child.medications ?? "",
-    care_contacts: child.care_contacts ?? "",
     notes: child.notes ?? "",
   });
 
@@ -300,14 +329,14 @@ function InfoForm({ child }: { child: Child }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["child", child.id] });
       queryClient.invalidateQueries({ queryKey: ["children"] });
-      toast.success("Sparat");
+      toast.success(t("folder.saved"));
     },
     onError: (error) => toast.error(error.message),
   });
 
-  const field = (key: keyof typeof form, label: string, type = "text") => (
+  const field = (key: keyof typeof form, label: TranslationKey, type = "text") => (
     <div className="space-y-2">
-      <Label htmlFor={key}>{label}</Label>
+      <Label htmlFor={key}>{t(label)}</Label>
       <Input
         id={key}
         type={type}
@@ -317,13 +346,13 @@ function InfoForm({ child }: { child: Child }) {
     </div>
   );
 
-  const area = (key: keyof typeof form, label: string, placeholder: string) => (
+  const area = (key: keyof typeof form, label: TranslationKey, placeholder: TranslationKey) => (
     <div className="space-y-2">
-      <Label htmlFor={key}>{label}</Label>
+      <Label htmlFor={key}>{t(label)}</Label>
       <Textarea
         id={key}
         rows={3}
-        placeholder={placeholder}
+        placeholder={t(placeholder)}
         value={form[key]}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
       />
@@ -339,17 +368,16 @@ function InfoForm({ child }: { child: Child }) {
       }}
     >
       <div className="grid gap-5 sm:grid-cols-2">
-        {field("name", "Namn")}
-        {field("birth_date", "Födelsedatum", "date")}
-        {field("personal_number", "Personnummer")}
-        {field("blood_type", "Blodgrupp")}
+        {field("name", "person.name")}
+        {field("birth_date", "person.birth", "date")}
+        {field("personal_number", "person.personalNumber")}
+        {field("blood_type", "person.blood")}
       </div>
-      {area("allergies", "Allergier", "T.ex. nötter, pollen")}
-      {area("medications", "Mediciner", "Namn, dos och när den ges")}
-      {area("care_contacts", "Vårdkontakter", "Vårdcentral, tandläkare, telefonnummer")}
-      {area("notes", "Övrig information", "Skola, storlekar, annat bra att minnas")}
+      {area("allergies", "person.allergies", "person.allergiesPlaceholder")}
+      {area("medications", "person.medications", "person.medicationsPlaceholder")}
+      {area("notes", "person.summary", "person.summaryPlaceholder")}
       <Button type="submit" disabled={save.isPending}>
-        Spara ändringar
+        {t("folder.save")}
       </Button>
     </form>
   );
@@ -363,13 +391,23 @@ type Entry = {
   updated_at: string;
 };
 
-const CATEGORIES = ["Allmänt", "Skola", "Aktiviteter", "Hälsa", "Kontakter"];
-
-function Entries({ childId, entries }: { childId: string; entries: Entry[] }) {
+function Entries({
+  childId,
+  category,
+  entries,
+  titlePlaceholder,
+  contentPlaceholder,
+}: {
+  childId: string;
+  category: string;
+  entries: Entry[];
+  titlePlaceholder: TranslationKey;
+  contentPlaceholder: TranslationKey;
+}) {
   const queryClient = useQueryClient();
+  const { t } = usePrefs();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]!);
 
   const add = useMutation({
     mutationFn: async () => {
@@ -387,7 +425,7 @@ function Entries({ childId, entries }: { childId: string; entries: Entry[] }) {
       setTitle("");
       setContent("");
       queryClient.invalidateQueries({ queryKey: ["entries", childId] });
-      toast.success("Anteckningen är sparad");
+      toast.success(t("entry.saved"));
     },
     onError: (error) => toast.error(error.message),
   });
@@ -409,58 +447,36 @@ function Entries({ childId, entries }: { childId: string; entries: Entry[] }) {
           add.mutate();
         }}
       >
-        <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
-          <div className="space-y-2">
-            <Label htmlFor="entry-title">Rubrik</Label>
-            <Input
-              id="entry-title"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="T.ex. Fotbollsträning"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="entry-category">Kategori</Label>
-            <select
-              id="entry-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-            >
-              {CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor={`entry-title-${category}`}>{t("entry.title")}</Label>
+          <Input
+            id={`entry-title-${category}`}
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t(titlePlaceholder)}
+          />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="entry-content">Information</Label>
+          <Label htmlFor={`entry-content-${category}`}>{t("entry.content")}</Label>
           <Textarea
-            id="entry-content"
+            id={`entry-content-${category}`}
             rows={3}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Tisdagar 17:30 på Vallens IP, tränare Anna 070-123 45 67"
+            placeholder={t(contentPlaceholder)}
           />
         </div>
         <Button type="submit" disabled={add.isPending}>
           <Plus className="size-4" aria-hidden />
-          Lägg till
+          {t("entry.add")}
         </Button>
       </form>
 
-      {entries.length === 0 && (
-        <p className="text-sm text-muted-foreground">Inga anteckningar än.</p>
-      )}
+      {entries.length === 0 && <p className="text-sm text-muted-foreground">{t("entry.empty")}</p>}
       {entries.map((entry) => (
         <article key={entry.id} className="surface flex items-start justify-between gap-4 p-5">
           <div>
-            <span className="text-xs tracking-wide text-accent uppercase">
-              {entry.category}
-            </span>
             <h3 className="text-xl">{entry.title}</h3>
             {entry.content && (
               <p className="mt-1 text-sm whitespace-pre-wrap text-muted-foreground">
@@ -471,7 +487,7 @@ function Entries({ childId, entries }: { childId: string; entries: Entry[] }) {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Ta bort anteckning"
+            aria-label={t("entry.remove")}
             onClick={() => remove.mutate(entry.id)}
           >
             <Trash2 className="size-4" aria-hidden />
@@ -486,6 +502,7 @@ type Task = { id: string; title: string; due_at: string | null; done: boolean };
 
 function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
   const queryClient = useQueryClient();
+  const { t, locale } = usePrefs();
   const [title, setTitle] = useState("");
   const [dueAt, setDueAt] = useState("");
 
@@ -539,17 +556,17 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="task-title">Uppgift</Label>
+          <Label htmlFor="task-title">{t("tasks.task")}</Label>
           <Input
             id="task-title"
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Boka tandläkartid"
+            placeholder={t("tasks.taskPlaceholder")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="task-due">Senast</Label>
+          <Label htmlFor="task-due">{t("tasks.due")}</Label>
           <Input
             id="task-due"
             type="datetime-local"
@@ -558,31 +575,31 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
           />
         </div>
         <Button type="submit" disabled={add.isPending}>
-          Lägg till
+          {t("entry.add")}
         </Button>
       </form>
 
-      {tasks.length === 0 && <p className="text-sm text-muted-foreground">Inga uppgifter än.</p>}
+      {tasks.length === 0 && <p className="text-sm text-muted-foreground">{t("tasks.empty")}</p>}
       <ul className="space-y-2">
         {tasks.map((task) => (
           <li key={task.id} className="surface flex items-center gap-3 p-4">
             <Checkbox
               checked={task.done}
               onCheckedChange={() => toggle.mutate(task)}
-              aria-label="Markera som klar"
+              aria-label={t("tasks.markDone")}
             />
             <span className="flex-1">
               <span className={task.done ? "line-through opacity-60" : ""}>{task.title}</span>
               {task.due_at && (
                 <span className="block text-xs text-muted-foreground">
-                  Senast {new Date(task.due_at).toLocaleString("sv-SE")}
+                  {t("tasks.dueShort")} {new Date(task.due_at).toLocaleString(locale)}
                 </span>
               )}
             </span>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Ta bort uppgift"
+              aria-label={t("entry.remove")}
               onClick={() => remove.mutate(task.id)}
             >
               <Trash2 className="size-4" aria-hidden />
@@ -604,6 +621,7 @@ type Document = {
 
 function Documents({ childId, documents }: { childId: string; documents: Document[] }) {
   const queryClient = useQueryClient();
+  const { t, locale } = usePrefs();
   const [uploading, setUploading] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["documents", childId] });
@@ -626,9 +644,9 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
       });
       if (error) throw error;
       invalidate();
-      toast.success("Filen är uppladdad");
+      toast.success(t("docs.uploaded"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Kunde inte ladda upp filen");
+      toast.error(error instanceof Error ? error.message : t("docs.uploadFail"));
     } finally {
       setUploading(false);
     }
@@ -639,7 +657,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
       .from(BUCKET)
       .createSignedUrl(doc.storage_path, 60);
     if (error || !data) {
-      toast.error("Kunde inte öppna filen");
+      toast.error(t("docs.openFail"));
       return;
     }
     window.open(data.signedUrl, "_blank", "noopener");
@@ -658,10 +676,8 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
   return (
     <div className="mt-4 space-y-4">
       <div className="surface p-6">
-        <Label htmlFor="doc-upload">Ladda upp dokument</Label>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Intyg, betyg, kvitton eller foton. Max 25 MB per fil, lagras privat.
-        </p>
+        <Label htmlFor="doc-upload">{t("docs.upload")}</Label>
+        <p className="mt-1 text-sm text-muted-foreground">{t("docs.uploadHelp")}</p>
         <div className="mt-4 flex items-center gap-3">
           <Input
             id="doc-upload"
@@ -677,7 +693,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
         </div>
       </div>
 
-      {documents.length === 0 && <p className="text-sm text-muted-foreground">Inga filer än.</p>}
+      {documents.length === 0 && <p className="text-sm text-muted-foreground">{t("docs.empty")}</p>}
       <ul className="space-y-2">
         {documents.map((doc) => (
           <li key={doc.id} className="surface flex items-center gap-3 p-4">
@@ -685,17 +701,17 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
             <span className="flex-1">
               <span className="block">{doc.name}</span>
               <span className="block text-xs text-muted-foreground">
-                {new Date(doc.created_at).toLocaleDateString("sv-SE")}
+                {new Date(doc.created_at).toLocaleDateString(locale)}
                 {doc.size_bytes ? ` · ${Math.round(doc.size_bytes / 1024)} kB` : ""}
               </span>
             </span>
             <Button variant="outline" size="sm" onClick={() => open(doc)}>
-              Öppna
+              {t("docs.open")}
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Ta bort fil"
+              aria-label={t("entry.remove")}
               onClick={() => remove(doc)}
             >
               <Trash2 className="size-4" aria-hidden />
