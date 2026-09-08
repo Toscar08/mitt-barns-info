@@ -5,13 +5,20 @@ import { z } from "zod";
 const AskInput = z.object({
   childId: z.string().uuid(),
   question: z.string().min(2).max(500),
+  lang: z.enum(["sv", "en"]).default("sv"),
 });
+
+const NOT_FOUND = {
+  sv: "Jag hittar inte den informationen i mappen.",
+  en: "I can't find that information in the folder.",
+};
 
 export const askAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AskInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    const lang = data.lang;
 
     const [child, entries, tasks, documents] = await Promise.all([
       supabase.from("children").select("*").eq("id", data.childId).maybeSingle(),
@@ -24,31 +31,41 @@ export const askAssistant = createServerFn({ method: "POST" })
     ]);
 
     if (!child.data) {
-      return { answer: "Jag hittar ingen mapp för det barnet." };
+      return { answer: NOT_FOUND[lang] };
     }
 
     const c = child.data;
     const contextText = [
-      `Barn: ${c.name}`,
-      c.birth_date ? `Födelsedatum: ${c.birth_date}` : null,
-      c.blood_type ? `Blodgrupp: ${c.blood_type}` : null,
-      c.allergies ? `Allergier: ${c.allergies}` : null,
-      c.medications ? `Mediciner: ${c.medications}` : null,
-      c.care_contacts ? `Vårdkontakter: ${c.care_contacts}` : null,
-      c.notes ? `Övrig information: ${c.notes}` : null,
+      "[PERSONAL DETAILS]",
+      `Name: ${c.name}`,
+      c.birth_date ? `Date of birth: ${c.birth_date}` : null,
+      c.personal_number ? `Personal ID number: ${c.personal_number}` : null,
+      c.blood_type ? `Blood type: ${c.blood_type}` : null,
+      c.allergies ? `Allergies: ${c.allergies}` : null,
+      c.medications ? `Medication: ${c.medications}` : null,
+      c.care_contacts ? `Care contacts: ${c.care_contacts}` : null,
+      c.notes ? `About the child: ${c.notes}` : null,
       "",
-      "Anteckningar och information:",
-      ...(entries.data ?? []).map(
-        (e) => `- [${e.category}] ${e.title}: ${e.content ?? ""}`.trim(),
-      ),
+      "[CONTACTS]",
+      ...(entries.data ?? [])
+        .filter((e) => e.category === "contacts")
+        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
       "",
-      "Uppgifter:",
+      "[CALENDAR AND ACTIVITIES]",
+      ...(entries.data ?? [])
+        .filter((e) => e.category === "calendar")
+        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
       ...(tasks.data ?? []).map(
         (t) =>
-          `- ${t.title}${t.due_at ? ` (senast ${new Date(t.due_at).toLocaleString("sv-SE")})` : ""}${t.done ? " [klar]" : ""}`,
+          `- Task: ${t.title}${t.due_at ? ` (due ${t.due_at})` : ""}${t.done ? " [done]" : ""}`,
       ),
       "",
-      "Dokument i mappen:",
+      "[OWN INFORMATION]",
+      ...(entries.data ?? [])
+        .filter((e) => e.category !== "contacts" && e.category !== "calendar")
+        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
+      "",
+      "[DOCUMENTS]",
       ...(documents.data ?? []).map((d) => `- ${d.name}`),
     ]
       .filter((line) => line !== null)
@@ -56,7 +73,7 @@ export const askAssistant = createServerFn({ method: "POST" })
 
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
-      return { answer: "AI-assistenten är inte tillgänglig just nu." };
+      return { answer: NOT_FOUND[lang] };
     }
 
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -72,23 +89,28 @@ export const askAssistant = createServerFn({ method: "POST" })
       const result = streamText({
         model: gateway("google/gemini-3.7-flash"),
         system: [
-          "Du är en hjälpsam assistent i en app där föräldrar samlar information om sina barn.",
-          "Svara kort, vänligt och på svenska.",
-          "Använd ENDAST informationen nedan. Om svaret inte finns där, säg att informationen inte är inlagd ännu.",
-          "Dagens datum: " + new Date().toISOString().slice(0, 10),
+          "You answer questions about ONE child, using ONLY the folder content below.",
+          "Hard rules:",
+          "- Never use general knowledge, never guess, never assume, never invent anything.",
+          "- Answer extremely short and direct: one short sentence, no preamble, no lists, no explanations.",
+          "- You may combine facts from several parts of the folder, but keep the answer short.",
+          "- Understand natural language: match the meaning even if the wording differs from the folder.",
+          `- If the answer is not in the folder, reply exactly: "${NOT_FOUND[lang]}" and nothing else.`,
+          lang === "sv"
+            ? "- Always answer in Swedish."
+            : "- Always answer in English.",
+          `Today's date: ${new Date().toISOString().slice(0, 10)}`,
           "",
-          "=== INFORMATION I BARNETS MAPP ===",
+          "=== CHILD FOLDER CONTENT ===",
           contextText,
         ].join("\n"),
         prompt: data.question,
       });
 
-      return { answer: await result.text };
+      const answer = (await result.text).trim();
+      return { answer: answer || NOT_FOUND[lang] };
     } catch (error) {
       console.error("assistant error", error);
-      return {
-        answer:
-          "Assistenten kunde inte svara just nu. Försök gärna igen om en liten stund.",
-      };
+      return { answer: NOT_FOUND[lang] };
     }
   });
