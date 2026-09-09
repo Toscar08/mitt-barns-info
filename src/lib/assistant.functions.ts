@@ -76,23 +76,35 @@ export const askAssistant = createServerFn({ method: "POST" })
       return { answer: NOT_FOUND[lang] };
     }
 
-    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const { createOpenAI } = await import("@ai-sdk/openai");
     const { streamText } = await import("ai");
 
-    const gateway = createOpenAICompatible({
-      name: "lovable",
+    const lovable = createOpenAI({
       baseURL: "https://ai.gateway.lovable.dev/v1",
-      headers: { "Lovable-API-Key": apiKey },
+      apiKey,
+      headers: {
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      },
     });
 
     try {
       const result = streamText({
-        model: gateway("google/gemini-3.7-flash"),
+        model: lovable.responses("openai/gpt-6-astra"),
+        providerOptions: {
+          openai: {
+            forceReasoning: true,
+            reasoningEffort: "low",
+            reasoningSummary: "auto",
+            store: false,
+          },
+        },
         system: [
           "You answer questions about ONE child, using ONLY the folder content below.",
           "Hard rules:",
           "- Never use general knowledge, never guess, never assume, never invent anything.",
-          "- Answer extremely short and direct: one short sentence, no preamble, no lists, no explanations.",
+          "- Answer extremely short and direct: the fact itself, ideally a few words or one short sentence.",
+          "- Do not restate the question, do not add preamble, lists or explanations.",
           "- You may combine facts from several parts of the folder, but keep the answer short.",
           "- Understand natural language: match the meaning even if the wording differs from the folder.",
           `- If the answer is not in the folder, reply exactly: "${NOT_FOUND[lang]}" and nothing else.`,
