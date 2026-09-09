@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      activation_codes: {
+        Row: {
+          amount_cents: number | null
+          code: string
+          created_at: string
+          currency: string | null
+          email: string | null
+          id: string
+          provider: string | null
+          provider_reference: string | null
+          status: string
+          used_at: string | null
+          used_by: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          code: string
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          id?: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: string
+          used_at?: string | null
+          used_by?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          code?: string
+          created_at?: string
+          currency?: string | null
+          email?: string | null
+          id?: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: string
+          used_at?: string | null
+          used_by?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_codes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           allergies: string | null
@@ -28,6 +81,7 @@ export type Database = {
           personal_number: string | null
           updated_at: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           allergies?: string | null
@@ -42,6 +96,7 @@ export type Database = {
           personal_number?: string | null
           updated_at?: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           allergies?: string | null
@@ -56,8 +111,17 @@ export type Database = {
           personal_number?: string | null
           updated_at?: string
           user_id?: string
+          workspace_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "children_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -69,6 +133,7 @@ export type Database = {
           size_bytes: number | null
           storage_path: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           child_id: string
@@ -79,6 +144,7 @@ export type Database = {
           size_bytes?: number | null
           storage_path: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           child_id?: string
@@ -89,6 +155,7 @@ export type Database = {
           size_bytes?: number | null
           storage_path?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -96,6 +163,13 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -110,6 +184,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           category?: string
@@ -120,6 +195,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           category?: string
@@ -130,6 +206,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -137,6 +214,13 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entries_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -151,6 +235,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           child_id: string
@@ -161,6 +246,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           child_id?: string
@@ -171,6 +257,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -180,7 +267,47 @@ export type Database = {
             referencedRelation: "children"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      workspaces: {
+        Row: {
+          activated_at: string
+          created_at: string
+          display_name: string | null
+          id: string
+          owner_id: string
+          pin_hash: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          owner_id: string
+          pin_hash?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          owner_id?: string
+          pin_hash?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
