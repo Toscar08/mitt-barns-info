@@ -76,18 +76,29 @@ export const askAssistant = createServerFn({ method: "POST" })
       return { answer: NOT_FOUND[lang] };
     }
 
-    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const { createOpenAI } = await import("@ai-sdk/openai");
     const { streamText } = await import("ai");
 
-    const gateway = createOpenAICompatible({
-      name: "lovable",
+    const lovable = createOpenAI({
       baseURL: "https://ai.gateway.lovable.dev/v1",
-      headers: { "Lovable-API-Key": apiKey },
+      apiKey,
+      headers: {
+        "Lovable-API-Key": apiKey,
+        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      },
     });
 
     try {
       const result = streamText({
-        model: gateway("google/gemini-3.7-flash"),
+        model: lovable.responses("openai/gpt-6-astra"),
+        providerOptions: {
+          openai: {
+            forceReasoning: true,
+            reasoningEffort: "low",
+            reasoningSummary: "auto",
+            store: false,
+          },
+        },
         system: [
           "You answer questions about ONE child, using ONLY the folder content below.",
           "Hard rules:",
