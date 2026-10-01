@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as KopRouteImport } from './routes/kop'
 import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticated/aktivera'
+import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authenticated/installningar'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
 import { Route as AuthenticatedFSlugRouteImport } from './routes/_authenticated/f.$slug'
@@ -42,6 +43,12 @@ const AuthenticatedAktiveraRoute = AuthenticatedAktiveraRouteImport.update({
   path: '/aktivera',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInstallningarRoute =
+  AuthenticatedInstallningarRouteImport.update({
+    id: '/installningar',
+    path: '/installningar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBarnIndexRoute = AuthenticatedBarnIndexRouteImport.update({
   id: '/barn/',
   path: '/barn/',
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/kop': typeof KopRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
+  '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/barn/': typeof AuthenticatedBarnIndexRoute
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/kop': typeof KopRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
+  '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/barn': typeof AuthenticatedBarnIndexRoute
@@ -84,6 +93,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/kop': typeof KopRoute
   '/_authenticated/aktivera': typeof AuthenticatedAktiveraRoute
+  '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
   '/_authenticated/barn/': typeof AuthenticatedBarnIndexRoute
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/kop'
     | '/aktivera'
+    | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
     | '/barn/'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/kop'
     | '/aktivera'
+    | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
     | '/barn'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/kop'
     | '/_authenticated/aktivera'
+    | '/_authenticated/installningar'
     | '/_authenticated/barn/$childId'
     | '/_authenticated/f/$slug'
     | '/_authenticated/barn/'
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAktiveraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/installningar': {
+      id: '/_authenticated/installningar'
+      path: '/installningar'
+      fullPath: '/installningar'
+      preLoaderRoute: typeof AuthenticatedInstallningarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/barn/': {
       id: '/_authenticated/barn/'
       path: '/barn'
@@ -189,6 +209,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAktiveraRoute: typeof AuthenticatedAktiveraRoute
+  AuthenticatedInstallningarRoute: typeof AuthenticatedInstallningarRoute
   AuthenticatedBarnChildIdRoute: typeof AuthenticatedBarnChildIdRoute
   AuthenticatedFSlugRoute: typeof AuthenticatedFSlugRoute
   AuthenticatedBarnIndexRoute: typeof AuthenticatedBarnIndexRoute
@@ -196,6 +217,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAktiveraRoute: AuthenticatedAktiveraRoute,
+  AuthenticatedInstallningarRoute: AuthenticatedInstallningarRoute,
   AuthenticatedBarnChildIdRoute: AuthenticatedBarnChildIdRoute,
   AuthenticatedFSlugRoute: AuthenticatedFSlugRoute,
   AuthenticatedBarnIndexRoute: AuthenticatedBarnIndexRoute,
