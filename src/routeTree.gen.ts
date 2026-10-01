@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as KopRouteImport } from './routes/kop'
+import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticated/aktivera'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
+import { Route as AuthenticatedFSlugRouteImport } from './routes/_authenticated/f.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +32,16 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KopRoute = KopRouteImport.update({
+  id: '/kop',
+  path: '/kop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAktiveraRoute = AuthenticatedAktiveraRouteImport.update({
+  id: '/aktivera',
+  path: '/aktivera',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBarnIndexRoute = AuthenticatedBarnIndexRouteImport.update({
   id: '/barn/',
   path: '/barn/',
@@ -40,17 +53,28 @@ const AuthenticatedBarnChildIdRoute =
     path: '/barn/$childId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFSlugRoute = AuthenticatedFSlugRouteImport.update({
+  id: '/f/$slug',
+  path: '/f/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/kop': typeof KopRoute
+  '/aktivera': typeof AuthenticatedAktiveraRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
+  '/f/$slug': typeof AuthenticatedFSlugRoute
   '/barn/': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/kop': typeof KopRoute
+  '/aktivera': typeof AuthenticatedAktiveraRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
+  '/f/$slug': typeof AuthenticatedFSlugRoute
   '/barn': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRoutesById {
@@ -58,20 +82,40 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/kop': typeof KopRoute
+  '/_authenticated/aktivera': typeof AuthenticatedAktiveraRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
+  '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
   '/_authenticated/barn/': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/barn/$childId' | '/barn/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/kop'
+    | '/aktivera'
+    | '/barn/$childId'
+    | '/f/$slug'
+    | '/barn/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/barn/$childId' | '/barn'
+  to:
+    | '/'
+    | '/auth'
+    | '/kop'
+    | '/aktivera'
+    | '/barn/$childId'
+    | '/f/$slug'
+    | '/barn'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/kop'
+    | '/_authenticated/aktivera'
     | '/_authenticated/barn/$childId'
+    | '/_authenticated/f/$slug'
     | '/_authenticated/barn/'
   fileRoutesById: FileRoutesById
 }
@@ -79,6 +123,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  KopRoute: typeof KopRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -104,6 +149,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kop': {
+      id: '/kop'
+      path: '/kop'
+      fullPath: '/kop'
+      preLoaderRoute: typeof KopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/aktivera': {
+      id: '/_authenticated/aktivera'
+      path: '/aktivera'
+      fullPath: '/aktivera'
+      preLoaderRoute: typeof AuthenticatedAktiveraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/barn/': {
       id: '/_authenticated/barn/'
       path: '/barn'
@@ -118,16 +177,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBarnChildIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/f/$slug': {
+      id: '/_authenticated/f/$slug'
+      path: '/f/$slug'
+      fullPath: '/f/$slug'
+      preLoaderRoute: typeof AuthenticatedFSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAktiveraRoute: typeof AuthenticatedAktiveraRoute
   AuthenticatedBarnChildIdRoute: typeof AuthenticatedBarnChildIdRoute
+  AuthenticatedFSlugRoute: typeof AuthenticatedFSlugRoute
   AuthenticatedBarnIndexRoute: typeof AuthenticatedBarnIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAktiveraRoute: AuthenticatedAktiveraRoute,
   AuthenticatedBarnChildIdRoute: AuthenticatedBarnChildIdRoute,
+  AuthenticatedFSlugRoute: AuthenticatedFSlugRoute,
   AuthenticatedBarnIndexRoute: AuthenticatedBarnIndexRoute,
 }
 
@@ -138,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  KopRoute: KopRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

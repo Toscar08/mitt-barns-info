@@ -1,0 +1,13 @@
+{
+  "name": "Barnmappen",
+  "short_name": "Barnmappen",
+  "description": "Din privata digitala mapp för dina barn.",
+  "start_url": "/barn",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F6F8F9",
+  "theme_color": "#123B4A",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
