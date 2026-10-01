@@ -192,3 +192,32 @@ export const myActivationCode = createServerFn({ method: "GET" })
       .maybeSingle();
     return data ?? null;
   });
+
+// Test purchase: issues an activation code without charging. Replace with a real
+// checkout + verified payment webhook once payments are enabled for the workspace.
+export const createTestPurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { generateActivationCode } = await import("@/lib/pin.server");
+    const { data: existing } = await supabaseAdmin
+      .from("activation_codes")
+      .select("code")
+      .eq("provider", "test")
+      .eq("provider_reference", context.userId)
+      .eq("status", "unused")
+      .maybeSingle();
+    if (existing) return { code: existing.code };
+    const code = generateActivationCode();
+    const email = (context.claims as { email?: string }).email ?? null;
+    const { error } = await supabaseAdmin.from("activation_codes").insert({
+      code,
+      email,
+      provider: "test",
+      provider_reference: context.userId,
+      amount_cents: 0,
+      currency: "SEK",
+    });
+    if (error) throw new Error(error.message);
+    return { code };
+  });
