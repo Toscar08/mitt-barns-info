@@ -102,7 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-512.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -111,7 +113,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-const prefsBootScript = `try{var t=localStorage.getItem('barnmappen.theme');if(t==='dark'){document.documentElement.classList.add('dark')}var l=localStorage.getItem('barnmappen.lang');if(l==='sv'||l==='en'){document.documentElement.lang=l}}catch(e){}`;
+const prefsBootScript = `try{var t=localStorage.getItem('barnmappen.theme');if(t==='dark'){document.documentElement.classList.add('dark')}var l=localStorage.getItem('barnmappen.lang');if(l==='sv'||l==='en'){document.documentElement.lang=l}}catch(e){}try{if('serviceWorker' in navigator&&window.self===window.top&&!/lovableproject|id-preview/.test(location.hostname)){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}}catch(e){}`;
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
