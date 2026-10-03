@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const [signedIn, setSignedIn] = useState(false);
-  const { t } = usePrefs();
+  const { t, lang } = usePrefs();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
@@ -84,6 +84,11 @@ function Landing() {
                   {signedIn ? t("landing.ctaIn") : t("landing.ctaOut")}
                 </Link>
               </Button>
+              {!signedIn && (
+                <Button asChild size="lg" variant="outline">
+                  <Link to="/kop">{lang === "sv" ? "Köp åtkomst" : "Buy access"}</Link>
+                </Button>
+              )}
             </div>
             <p className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
               <Lock className="size-4" aria-hidden />
@@ -107,6 +112,35 @@ function Landing() {
               <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
             </article>
           ))}
+        </section>
+
+        <section className="mt-20 grid gap-8 lg:grid-cols-2">
+          <div>
+            <h2 className="text-3xl">{lang === "sv" ? "Så fungerar det" : "How it works"}</h2>
+            <ol className="mt-6 space-y-4 text-muted-foreground">
+              {(lang === "sv"
+                ? ["Köp åtkomst och få en aktiveringskod med QR-kod.", "Skapa konto och aktivera din sida med koden.", "Välj ett eget adressnamn, t.ex. /f/familj-a.", "Lägg till barn och samla allt – logga sedan in som vanligt."]
+                : ["Buy access and get an activation code with QR code.", "Create an account and activate your site with the code.", "Pick your own address, e.g. /f/family-a.", "Add children and gather everything – then just sign in as usual."]
+              ).map((step, i) => (
+                <li key={step} className="flex gap-3">
+                  <span className="font-display text-xl text-accent">{i + 1}</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="surface p-8">
+            <h2 className="text-3xl">{lang === "sv" ? "Integritet och säkerhet" : "Privacy and security"}</h2>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {lang === "sv"
+                ? "Din sida kräver alltid inloggning, och du kan lägga till en PIN-kod. Varje familj ser bara sin egen information – det kontrolleras på servern, inte via hemliga länkar. Du kan exportera och återställa allt när du vill."
+                : "Your site always requires sign-in, and you can add a PIN. Each family only sees its own information – checked on the server, not by secret links. Export and restore everything whenever you like."}
+            </p>
+            <p className="mt-6 font-display text-3xl">495 kr <span className="text-base text-muted-foreground">{lang === "sv" ? "/ år" : "/ year"}</span></p>
+            <Button asChild className="mt-4">
+              <Link to="/kop">{lang === "sv" ? "Köp åtkomst" : "Buy access"}</Link>
+            </Button>
+          </div>
         </section>
       </main>
     </div>
