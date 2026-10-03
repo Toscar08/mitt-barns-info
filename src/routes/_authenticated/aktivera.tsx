@@ -14,7 +14,7 @@ import { normalizeSlug } from "@/lib/slug";
 import { activateWorkspace, checkSlug } from "@/lib/workspace.functions";
 import { usePrefs } from "@/lib/prefs";
 
-type Search = { code?: string };
+type Search = { code?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/aktivera")({
   validateSearch: (s: Record<string, unknown>): Search => ({
