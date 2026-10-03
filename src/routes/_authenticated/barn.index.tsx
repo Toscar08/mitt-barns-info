@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Upload, ChevronRight, ShieldCheck } from "lucide-react";
 
+import { PrivateGate } from "@/components/PrivateGate";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,11 @@ export const Route = createFileRoute("/_authenticated/barn/")({
       { property: "og:description", content: "Översikt över dina barns digitala mappar." },
     ],
   }),
-  component: ChildrenPage,
+  component: () => (
+    <PrivateGate>
+      <ChildrenPage />
+    </PrivateGate>
+  ),
 });
 
 function ChildrenPage() {
@@ -33,6 +38,22 @@ function ChildrenPage() {
   const [birthDate, setBirthDate] = useState("");
   const [adding, setAdding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { lang } = usePrefs();
+  const [term, setTerm] = useState("");
+  const search = useQuery({
+    queryKey: ["search", term],
+    enabled: term.trim().length >= 2,
+    queryFn: async () => {
+      const q = `%${term.trim().replace(/[%_,()]/g, " ")}%`;
+      const { data, error } = await supabase
+        .from("entries")
+        .select("id, title, content, child_id, children(name)")
+        .or(`title.ilike.${q},content.ilike.${q}`)
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const children = useQuery({
     queryKey: ["children"],
@@ -158,6 +179,33 @@ function ChildrenPage() {
           </div>
         </div>
 
+        <div className="mt-6">
+          <Input
+            type="search"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder={lang === "sv" ? "Sök i alla mappar…" : "Search all folders…"}
+            aria-label={lang === "sv" ? "Sök" : "Search"}
+          />
+          {term.trim().length >= 2 && (
+            <ul className="surface mt-2 divide-y divide-border">
+              {search.data?.length === 0 && (
+                <li className="p-4 text-sm text-muted-foreground">{lang === "sv" ? "Inga träffar." : "No results."}</li>
+              )}
+              {search.data?.map((hit) => (
+                <li key={hit.id}>
+                  <Link to="/barn/$childId" params={{ childId: hit.child_id }} className="block p-4 hover:bg-secondary/60">
+                    <span className="block font-medium">{hit.title}</span>
+                    <span className="block truncate text-sm text-muted-foreground">
+                      {(hit.children as { name: string } | null)?.name} · {hit.content}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {adding && (
           <form
             className="surface mt-6 grid gap-4 p-6 sm:grid-cols-[1fr_auto_auto] sm:items-end"
@@ -201,7 +249,7 @@ function ChildrenPage() {
               <p className="mt-2 text-sm text-muted-foreground">{t("children.emptyText")}</p>
             </div>
           )}
-          {children.data?.map((child) => (
+          {children.data?.filter((c) => !term.trim() || c.name.toLowerCase().includes(term.trim().toLowerCase())).map((child) => (
             <Link
               key={child.id}
               to="/barn/$childId"

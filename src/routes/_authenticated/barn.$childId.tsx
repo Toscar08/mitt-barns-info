@@ -1,3 +1,4 @@
+import { PrivateGate } from "@/components/PrivateGate";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -38,7 +39,11 @@ export const Route = createFileRoute("/_authenticated/barn/$childId")({
       { property: "og:description", content: "All information om barnet på ett ställe." },
     ],
   }),
-  component: ChildFolder,
+  component: () => (
+    <PrivateGate>
+      <ChildFolder />
+    </PrivateGate>
+  ),
 });
 
 const BUCKET = "child-documents";
