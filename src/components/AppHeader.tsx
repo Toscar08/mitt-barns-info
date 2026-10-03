@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { FolderHeart, LogOut } from "lucide-react";
+import { FolderHeart, LogOut, Settings } from "lucide-react";
+import { lockWorkspace } from "@/components/PrivateGate";
 
 import { Button } from "@/components/ui/button";
 import { PrefToggles } from "@/components/PrefToggles";
@@ -15,6 +16,7 @@ export function AppHeader() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    lockWorkspace();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -28,6 +30,11 @@ export function AppHeader() {
         </Link>
         <div className="flex items-center gap-1">
           <PrefToggles />
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/installningar" aria-label="Inställningar / Settings">
+              <Settings className="size-4" aria-hidden />
+            </Link>
+          </Button>
           <Button variant="ghost" size="sm" onClick={signOut}>
             <LogOut className="size-4" aria-hidden />
             {t("nav.signOut")}

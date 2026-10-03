@@ -249,7 +249,7 @@ function ChildrenPage() {
               <p className="mt-2 text-sm text-muted-foreground">{t("children.emptyText")}</p>
             </div>
           )}
-          {children.data?.filter((c) => !term.trim() || c.name.toLowerCase().includes(term.trim().toLowerCase()) || term.trim().length >= 2).map((child) => (
+          {children.data?.filter((c) => !term.trim() || c.name.toLowerCase().includes(term.trim().toLowerCase())).map((child) => (
             <Link
               key={child.id}
               to="/barn/$childId"
