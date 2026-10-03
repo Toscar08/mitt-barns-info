@@ -22,7 +22,7 @@ const dict = {
     "landing.lead":
       "En egen digital mapp för varje barn – personuppgifter, kontakter, kalender, dokument och egen information. Fråga assistenten när du behöver svar snabbt.",
     "landing.ctaIn": "Öppna mina mappar",
-    "landing.ctaOut": "Kom igång gratis",
+    "landing.ctaOut": "Skapa konto gratis",
     "landing.privacy":
       "Bara du kommer åt din information. Exportera eller ta bort den när du vill.",
     "landing.heroAlt":
@@ -99,7 +99,14 @@ const dict = {
     "person.medications": "Mediciner",
     "person.medicationsPlaceholder": "Namn, dos och när den ges",
     "person.summary": "Kort om barnet",
-    "person.summaryPlaceholder": "Skola, storlekar, favoritmat, annat bra att minnas",
+    "person.summaryPlaceholder": "Favoritmat, rutiner, annat bra att minnas",
+    "person.practical": "Bra att ha till hands",
+    "person.clothing": "Klädstorlek",
+    "person.shoe": "Skostorlek",
+    "person.school": "Skola / förskola",
+    "person.class": "Klass / avdelning",
+    "person.passport": "Passnummer",
+    "person.passportExpiry": "Passet gäller till",
 
     "entry.title": "Rubrik",
     "entry.content": "Information",
@@ -152,7 +159,7 @@ const dict = {
     "landing.lead":
       "A separate digital folder for every child – personal details, contacts, calendar, documents and your own notes. Ask the assistant whenever you need an answer fast.",
     "landing.ctaIn": "Open my folders",
-    "landing.ctaOut": "Get started free",
+    "landing.ctaOut": "Create a free account",
     "landing.privacy": "Only you can see your information. Export or delete it whenever you like.",
     "landing.heroAlt":
       "Children's clothes, small shoes and a document neatly arranged on a light wooden table",

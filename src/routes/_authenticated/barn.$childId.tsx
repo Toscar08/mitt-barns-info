@@ -197,7 +197,7 @@ function ChildFolder() {
         <Assistant childId={childId} childName={child.data.name} />
 
         <Tabs defaultValue="person" className="mt-8">
-          <TabsList className="flex-wrap">
+          <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:w-auto">
             <TabsTrigger value="person">{t("tab.person")}</TabsTrigger>
             <TabsTrigger value="contacts">{t("tab.contacts")}</TabsTrigger>
             <TabsTrigger value="calendar">{t("tab.calendar")}</TabsTrigger>
@@ -258,6 +258,12 @@ type Child = {
   medications: string | null;
   care_contacts: string | null;
   notes: string | null;
+  clothing_size: string | null;
+  shoe_size: string | null;
+  passport_number: string | null;
+  passport_expiry: string | null;
+  school: string | null;
+  school_class: string | null;
 };
 
 function Assistant({ childId, childName }: { childId: string; childName: string }) {
@@ -321,13 +327,23 @@ function InfoForm({ child }: { child: Child }) {
     allergies: child.allergies ?? "",
     medications: child.medications ?? "",
     notes: child.notes ?? "",
+    clothing_size: child.clothing_size ?? "",
+    shoe_size: child.shoe_size ?? "",
+    passport_number: child.passport_number ?? "",
+    passport_expiry: child.passport_expiry ?? "",
+    school: child.school ?? "",
+    school_class: child.school_class ?? "",
   });
 
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
         .from("children")
-        .update({ ...form, birth_date: form.birth_date || null })
+        .update({
+          ...form,
+          birth_date: form.birth_date || null,
+          passport_expiry: form.passport_expiry || null,
+        })
         .eq("id", child.id);
       if (error) throw error;
     },
@@ -380,6 +396,15 @@ function InfoForm({ child }: { child: Child }) {
       </div>
       {area("allergies", "person.allergies", "person.allergiesPlaceholder")}
       {area("medications", "person.medications", "person.medicationsPlaceholder")}
+      <h3 className="pt-2 text-xl">{t("person.practical")}</h3>
+      <div className="grid gap-5 sm:grid-cols-2">
+        {field("clothing_size", "person.clothing")}
+        {field("shoe_size", "person.shoe")}
+        {field("school", "person.school")}
+        {field("school_class", "person.class")}
+        {field("passport_number", "person.passport")}
+        {field("passport_expiry", "person.passportExpiry", "date")}
+      </div>
       {area("notes", "person.summary", "person.summaryPlaceholder")}
       <Button type="submit" disabled={save.isPending}>
         {t("folder.save")}
