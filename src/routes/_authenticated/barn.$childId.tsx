@@ -307,6 +307,7 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
           {loading ? t("ai.thinking") : t("ai.ask")}
         </Button>
       </form>
+      <p className="mt-3 text-xs text-muted-foreground">{t("ai.disclaimer")}</p>
       {answer && (
         <p className="mt-4 rounded-xl bg-secondary p-4 text-sm whitespace-pre-wrap text-secondary-foreground">
           {answer}

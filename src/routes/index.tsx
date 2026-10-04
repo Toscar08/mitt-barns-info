@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { FolderHeart, HeartPulse, FileText, Sparkles, Lock } from "lucide-react";
 
+import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { PrefToggles } from "@/components/PrefToggles";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,13 +137,14 @@ function Landing() {
                 ? "Din sida kräver alltid inloggning, och du kan lägga till en PIN-kod. Varje familj ser bara sin egen information – det kontrolleras på servern, inte via hemliga länkar. Du kan exportera och återställa allt när du vill."
                 : "Your site always requires sign-in, and you can add a PIN. Each family only sees its own information – checked on the server, not by secret links. Export and restore everything whenever you like."}
             </p>
-            <p className="mt-6 font-display text-3xl">495 kr <span className="text-base text-muted-foreground">{lang === "sv" ? "/ år" : "/ year"}</span></p>
+            <p className="mt-6 font-display text-3xl">495 kr <span className="text-base text-muted-foreground">{lang === "sv" ? "/ år inkl. moms" : "/ year incl. VAT"}</span></p>
             <Button asChild className="mt-4">
               <Link to="/kop">{lang === "sv" ? "Köp åtkomst" : "Buy access"}</Link>
             </Button>
           </div>
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

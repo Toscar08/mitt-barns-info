@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PrefToggles } from "@/components/PrefToggles";
+import { SiteFooter } from "@/components/SiteFooter";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createTestPurchase } from "@/lib/workspace.functions";
@@ -31,6 +33,8 @@ function BuyPage() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeWithdrawal, setAgreeWithdrawal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
@@ -65,7 +69,7 @@ function BuyPage() {
         <h1 className="font-display text-4xl">{sv ? "Skaffa din egen Barnmapp" : "Get your own Barnmappen"}</h1>
         <div className="mt-8 rounded-2xl border border-border bg-card p-8">
           <p className="font-display text-3xl">
-            495 kr <span className="text-base text-muted-foreground">{sv ? "/ år" : "/ year"}</span>
+            495 kr <span className="text-base text-muted-foreground">{sv ? "/ år inkl. 25 % moms" : "/ year incl. 25% VAT"}</span>
           </p>
           <ul className="mt-6 space-y-3">
             {features.map((f) => (
@@ -107,12 +111,34 @@ function BuyPage() {
               </Button>
             </div>
           ) : (
-            <Button className="mt-6 w-full" onClick={buy} disabled={busy || signedIn === null}>
+            <>
+            <div className="mt-6 space-y-3 text-sm">
+              <label className="flex gap-3">
+                <Checkbox checked={agreeTerms} onCheckedChange={(v) => setAgreeTerms(v === true)} className="mt-0.5" />
+                <span>
+                  {sv ? "Jag godkänner " : "I accept the "}
+                  <Link to="/villkor" className="underline">{sv ? "villkoren" : "terms"}</Link>
+                  {sv ? " och har läst " : " and have read the "}
+                  <Link to="/integritetspolicy" className="underline">{sv ? "integritetspolicyn" : "privacy policy"}</Link>.
+                </span>
+              </label>
+              <label className="flex gap-3">
+                <Checkbox checked={agreeWithdrawal} onCheckedChange={(v) => setAgreeWithdrawal(v === true)} className="mt-0.5" />
+                <span>
+                  {sv
+                    ? "Jag samtycker till att tjänsten aktiveras direkt och bekräftar att min 14 dagars ångerrätt därmed upphör."
+                    : "I agree that the service starts immediately and acknowledge that my 14-day right of withdrawal is thereby lost."}
+                </span>
+              </label>
+            </div>
+            <Button className="mt-6 w-full" onClick={buy} disabled={busy || signedIn === null || !agreeTerms || !agreeWithdrawal}>
               {sv ? "Köp (testläge)" : "Buy (test mode)"}
             </Button>
+            </>
           )}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
