@@ -139,6 +139,7 @@ const dict = {
 
     "ai.heading": "Fråga om",
     "ai.lead": "Assistenten svarar bara utifrån informationen i barnets mapp.",
+    "ai.disclaimer": "Endast ett minnesstöd – ersätter aldrig vård eller medicinsk rådgivning. Kontrollera alltid allergier och doser. Vid akut fara ring 112, rådgivning 1177.",
     "ai.placeholder": "Vad var min sons träningstid?",
     "ai.ask": "Fråga",
     "ai.thinking": "Tänker…",
@@ -275,6 +276,7 @@ const dict = {
 
     "ai.heading": "Ask about",
     "ai.lead": "The assistant only answers from the information in this child's folder.",
+    "ai.disclaimer": "A memory aid only – never a substitute for medical care or advice. Always verify allergies and doses. In an emergency call 112.",
     "ai.placeholder": "What time is my son's practice?",
     "ai.ask": "Ask",
     "ai.thinking": "Thinking…",
