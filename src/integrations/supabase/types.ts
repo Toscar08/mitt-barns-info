@@ -73,12 +73,18 @@ export type Database = {
           birth_date: string | null
           blood_type: string | null
           care_contacts: string | null
+          clothing_size: string | null
           created_at: string
           id: string
           medications: string | null
           name: string
           notes: string | null
+          passport_expiry: string | null
+          passport_number: string | null
           personal_number: string | null
+          school: string | null
+          school_class: string | null
+          shoe_size: string | null
           updated_at: string
           user_id: string
           workspace_id: string | null
@@ -88,12 +94,18 @@ export type Database = {
           birth_date?: string | null
           blood_type?: string | null
           care_contacts?: string | null
+          clothing_size?: string | null
           created_at?: string
           id?: string
           medications?: string | null
           name: string
           notes?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           personal_number?: string | null
+          school?: string | null
+          school_class?: string | null
+          shoe_size?: string | null
           updated_at?: string
           user_id: string
           workspace_id?: string | null
@@ -103,12 +115,18 @@ export type Database = {
           birth_date?: string | null
           blood_type?: string | null
           care_contacts?: string | null
+          clothing_size?: string | null
           created_at?: string
           id?: string
           medications?: string | null
           name?: string
           notes?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           personal_number?: string | null
+          school?: string | null
+          school_class?: string | null
+          shoe_size?: string | null
           updated_at?: string
           user_id?: string
           workspace_id?: string | null
