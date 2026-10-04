@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IntegritetspolicyRouteImport } from './routes/integritetspolicy'
 import { Route as KopRouteImport } from './routes/kop'
+import { Route as VillkorRouteImport } from './routes/villkor'
 import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticated/aktivera'
 import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authenticated/installningar'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
@@ -33,9 +35,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegritetspolicyRoute = IntegritetspolicyRouteImport.update({
+  id: '/integritetspolicy',
+  path: '/integritetspolicy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KopRoute = KopRouteImport.update({
   id: '/kop',
   path: '/kop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VillkorRoute = VillkorRouteImport.update({
+  id: '/villkor',
+  path: '/villkor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAktiveraRoute = AuthenticatedAktiveraRouteImport.update({
@@ -69,7 +81,9 @@ const AuthenticatedFSlugRoute = AuthenticatedFSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
+  '/villkor': typeof VillkorRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
@@ -79,7 +93,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
+  '/villkor': typeof VillkorRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
@@ -91,7 +107,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
+  '/villkor': typeof VillkorRoute
   '/_authenticated/aktivera': typeof AuthenticatedAktiveraRoute
   '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
@@ -103,7 +121,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/integritetspolicy'
     | '/kop'
+    | '/villkor'
     | '/aktivera'
     | '/installningar'
     | '/barn/$childId'
@@ -113,7 +133,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/integritetspolicy'
     | '/kop'
+    | '/villkor'
     | '/aktivera'
     | '/installningar'
     | '/barn/$childId'
@@ -124,7 +146,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/integritetspolicy'
     | '/kop'
+    | '/villkor'
     | '/_authenticated/aktivera'
     | '/_authenticated/installningar'
     | '/_authenticated/barn/$childId'
@@ -136,7 +160,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  IntegritetspolicyRoute: typeof IntegritetspolicyRoute
   KopRoute: typeof KopRoute
+  VillkorRoute: typeof VillkorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -162,11 +188,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integritetspolicy': {
+      id: '/integritetspolicy'
+      path: '/integritetspolicy'
+      fullPath: '/integritetspolicy'
+      preLoaderRoute: typeof IntegritetspolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kop': {
       id: '/kop'
       path: '/kop'
       fullPath: '/kop'
       preLoaderRoute: typeof KopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/villkor': {
+      id: '/villkor'
+      path: '/villkor'
+      fullPath: '/villkor'
+      preLoaderRoute: typeof VillkorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/aktivera': {
@@ -230,7 +270,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  IntegritetspolicyRoute: IntegritetspolicyRoute,
   KopRoute: KopRoute,
+  VillkorRoute: VillkorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
