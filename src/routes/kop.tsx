@@ -69,7 +69,7 @@ function BuyPage() {
         <h1 className="font-display text-4xl">{sv ? "Skaffa din egen Barnmapp" : "Get your own Barnmappen"}</h1>
         <div className="mt-8 rounded-2xl border border-border bg-card p-8">
           <p className="font-display text-3xl">
-            495 kr <span className="text-base text-muted-foreground">{sv ? "/ år inkl. 25 % moms" : "/ year incl. 25% VAT"}</span>
+            499 kr <span className="text-base text-muted-foreground">{sv ? "engångsköp, inkl. 25 % moms" : "one-time purchase, incl. 25% VAT"}</span>
           </p>
           <ul className="mt-6 space-y-3">
             {features.map((f) => (
