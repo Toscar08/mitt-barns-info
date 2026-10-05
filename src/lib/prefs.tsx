@@ -52,7 +52,7 @@ const dict = {
     "auth.signUp": "Skapa konto",
     "auth.toSignUp": "Har du inget konto? Skapa ett",
     "auth.toSignIn": "Har du redan ett konto? Logga in",
-    "auth.encrypted": "Krypterad överföring och privat lagring",
+    "auth.encrypted": "Krypterad överföring. Inloggning krävs alltid",
     "auth.error": "Något gick fel",
 
     "children.title": "Mina barn",
@@ -189,7 +189,7 @@ const dict = {
     "auth.signUp": "Create account",
     "auth.toSignUp": "No account yet? Create one",
     "auth.toSignIn": "Already have an account? Sign in",
-    "auth.encrypted": "Encrypted transfer and private storage",
+    "auth.encrypted": "Encrypted transfer. Sign-in always required",
     "auth.error": "Something went wrong",
 
     "children.title": "My children",

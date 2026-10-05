@@ -27,6 +27,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
         setUnlocked(true);
       } else {
         setError(true);
+        setLocked("locked" in res && !!res.locked);
         setPin("");
       }
     } finally {
@@ -82,7 +84,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
           aria-label="PIN"
         />
         {error && (
-          <p className="text-sm text-destructive">{sv ? "Fel PIN-kod." : "Wrong PIN."}</p>
+          <p className="text-sm text-destructive">{locked ? (sv ? "För många försök. Vänta 15 minuter." : "Too many attempts. Wait 15 minutes.") : sv ? "Fel PIN-kod." : "Wrong PIN."}</p>
         )}
         <Button type="submit" className="w-full" disabled={busy || pin.length < 4}>
           {sv ? "Lås upp" : "Unlock"}
