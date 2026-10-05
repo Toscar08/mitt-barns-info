@@ -301,7 +301,9 @@ export type Database = {
           display_name: string | null
           id: string
           owner_id: string
+          pin_failed_attempts: number
           pin_hash: string | null
+          pin_locked_until: string | null
           slug: string
           updated_at: string
         }
@@ -311,7 +313,9 @@ export type Database = {
           display_name?: string | null
           id?: string
           owner_id: string
+          pin_failed_attempts?: number
           pin_hash?: string | null
+          pin_locked_until?: string | null
           slug: string
           updated_at?: string
         }
@@ -321,7 +325,9 @@ export type Database = {
           display_name?: string | null
           id?: string
           owner_id?: string
+          pin_failed_attempts?: number
           pin_hash?: string | null
+          pin_locked_until?: string | null
           slug?: string
           updated_at?: string
         }

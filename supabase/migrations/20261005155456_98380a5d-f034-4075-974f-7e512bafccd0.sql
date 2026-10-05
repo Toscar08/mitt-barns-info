@@ -1,0 +1,1 @@
+ALTER TABLE public.workspaces ADD COLUMN pin_failed_attempts integer NOT NULL DEFAULT 0, ADD COLUMN pin_locked_until timestamptz;
