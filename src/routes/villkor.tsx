@@ -23,7 +23,7 @@ function TermsPage() {
   const sv = lang === "sv";
   const sections = sv
     ? [
-        { h: "1. Tjänsten", p: [`Barnmappen tillhandahålls av ${COMPANY.name}, org.nr ${COMPANY.orgNr}, ${COMPANY.address}. Tjänsten är ett digitalt hjälpmedel där vårdnadshavare kan samla och organisera information om sina barn.`] },
+        { h: "1. Tjänsten", p: [`Barnmappen tillhandahålls av ${COMPANY.name}, Sverige (kontakt: ${COMPANY.email}). Tjänsten är ett digitalt hjälpmedel där vårdnadshavare kan samla och organisera information om sina barn.`] },
         { h: "2. Konto och behörighet", p: ["Du måste vara minst 18 år och vårdnadshavare (eller ha vårdnadshavarens uppdrag) för de barn du lägger in. Kontot är personligt; du ansvarar för att skydda lösenord och PIN-kod.", "Vid vårdnadstvist eller oenighet mellan vårdnadshavare ger vi inte ut information till någon annan än kontoinnehavaren, utom när lag eller myndighetsbeslut kräver det."] },
         { h: "3. Skyddade personuppgifter", p: ["Du får inte lägga in uppgifter om personer med skyddade personuppgifter (sekretessmarkering, skyddad folkbokföring eller fingerade personuppgifter), t.ex. adress, skola eller kontaktuppgifter. Om sådan uppgift finns ska du radera den."] },
         { h: "4. AI-assistenten – ingen medicinsk rådgivning", p: ["AI-assistenten är ett organisatoriskt minnesstöd som söker i den information du själv har lagt in. Den kan ge ofullständiga eller felaktiga svar.", "Assistenten ersätter aldrig läkare, apotek, vårdpersonal eller akutsjukvård. Kontrollera alltid uppgifter om allergier, mediciner och doser mot originalkällan. Vid akut fara ring 112, för sjukvårdsrådgivning ring 1177."] },
@@ -35,7 +35,7 @@ function TermsPage() {
         { h: "10. Tvister", p: [`Svensk lag gäller. Kontakta oss först på ${COMPANY.email}. Du kan även vända dig till Allmänna reklamationsnämnden (ARN) eller EU:s plattform för tvistlösning online.`] },
       ]
     : [
-        { h: "1. The service", p: [`Barnmappen is provided by ${COMPANY.name}, reg. no ${COMPANY.orgNr}, ${COMPANY.address}. It is a digital tool for guardians to organise information about their children.`] },
+        { h: "1. The service", p: [`Barnmappen is provided by ${COMPANY.name}, Sweden (contact: ${COMPANY.email}). It is a digital tool for guardians to organise information about their children.`] },
         { h: "2. Account", p: ["You must be 18+ and a guardian of the children you add. You are responsible for protecting your password and PIN. In custody disputes we only disclose data to the account holder unless required by law."] },
         { h: "3. Protected identities", p: ["Do not add details about persons with protected personal data (e.g. protected address, school or contacts)."] },
         { h: "4. AI assistant – no medical advice", p: ["The AI assistant is an organisational memory aid that searches only your own entries and may be incomplete or wrong. It never replaces doctors, pharmacists or emergency care. Always verify allergies, medication and doses. In an emergency call 112."] },

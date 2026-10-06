@@ -23,7 +23,7 @@ function PrivacyPage() {
   const sv = lang === "sv";
   const sections = sv
     ? [
-        { h: "Personuppgiftsansvarig", p: [`${COMPANY.name}, org.nr ${COMPANY.orgNr}, ${COMPANY.address}. Kontakt: ${COMPANY.email}.`] },
+        { h: "Personuppgiftsansvarig", p: [`${COMPANY.name}, Sverige. Kontakt: ${COMPANY.email}.`] },
         { h: "Vilka uppgifter vi behandlar", p: ["Kontouppgifter (e-post, inloggningsuppgifter), betalningsuppgifter samt det du själv lägger in om dina barn: namn, födelsedatum, personnummer, passuppgifter, skola, kontakter, kalender, dokument och anteckningar.", "Uppgifter om allergier, mediciner och blodgrupp är hälsouppgifter, en känslig kategori enligt GDPR artikel 9."] },
         { h: "Laglig grund", p: ["Kontot och tjänsten: fullgörande av avtal (art. 6.1 b). Hälsouppgifter: ditt uttryckliga samtycke som vårdnadshavare (art. 9.2 a), som du kan återkalla genom att radera uppgifterna. Bokföring: rättslig förpliktelse."] },
         { h: "AI-assistenten", p: ["När du ställer en fråga skickas relevant information ur barnets mapp till en AI-tjänst för att formulera svaret. Uppgifterna används enbart för att besvara frågan och lagras inte för träning av modeller. Använd inte assistenten om du inte vill detta."] },
@@ -34,7 +34,7 @@ function PrivacyPage() {
         { h: "Lokal lagring", p: ["Vi använder endast nödvändig lokal lagring i webbläsaren för inloggning, språk, tema och PIN-upplåsning. Inga spårnings- eller reklamcookies."] },
       ]
     : [
-        { h: "Controller", p: [`${COMPANY.name}, reg. no ${COMPANY.orgNr}, ${COMPANY.address}. Contact: ${COMPANY.email}.`] },
+        { h: "Controller", p: [`${COMPANY.name}, Sweden. Contact: ${COMPANY.email}.`] },
         { h: "Data we process", p: ["Account and payment data, plus what you add about your children, including health data (allergies, medication, blood type) – a special category under GDPR Art. 9."] },
         { h: "Legal basis", p: ["Contract (Art. 6.1 b); explicit consent for health data (Art. 9.2 a), withdrawn by deleting the data; legal obligation for bookkeeping."] },
         { h: "AI assistant", p: ["When you ask a question, relevant folder information is sent to an AI service only to produce the answer, not to train models."] },
