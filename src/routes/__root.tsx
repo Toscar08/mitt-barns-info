@@ -86,6 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "En trygg digital mapp per barn: hälsa, dokument, anteckningar och uppgifter – med AI-assistent.",
       },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Barnmappen" },
+      { name: "theme-color", content: "#123B4A" },
       { property: "og:title", content: "Barnmappen" },
       {
         property: "og:description",

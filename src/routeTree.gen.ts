@@ -16,6 +16,7 @@ import { Route as IntegritetspolicyRouteImport } from './routes/integritetspolic
 import { Route as KopRouteImport } from './routes/kop'
 import { Route as VillkorRouteImport } from './routes/villkor'
 import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticated/aktivera'
+import { Route as AuthenticatedFragaRouteImport } from './routes/_authenticated/fraga'
 import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authenticated/installningar'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
@@ -55,6 +56,11 @@ const AuthenticatedAktiveraRoute = AuthenticatedAktiveraRouteImport.update({
   path: '/aktivera',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFragaRoute = AuthenticatedFragaRouteImport.update({
+  id: '/fraga',
+  path: '/fraga',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInstallningarRoute =
   AuthenticatedInstallningarRouteImport.update({
     id: '/installningar',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/kop': typeof KopRoute
   '/villkor': typeof VillkorRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
+  '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/kop': typeof KopRoute
   '/villkor': typeof VillkorRoute
   '/aktivera': typeof AuthenticatedAktiveraRoute
+  '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/kop': typeof KopRoute
   '/villkor': typeof VillkorRoute
   '/_authenticated/aktivera': typeof AuthenticatedAktiveraRoute
+  '/_authenticated/fraga': typeof AuthenticatedFragaRoute
   '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/kop'
     | '/villkor'
     | '/aktivera'
+    | '/fraga'
     | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/kop'
     | '/villkor'
     | '/aktivera'
+    | '/fraga'
     | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/kop'
     | '/villkor'
     | '/_authenticated/aktivera'
+    | '/_authenticated/fraga'
     | '/_authenticated/installningar'
     | '/_authenticated/barn/$childId'
     | '/_authenticated/f/$slug'
@@ -216,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAktiveraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/fraga': {
+      id: '/_authenticated/fraga'
+      path: '/fraga'
+      fullPath: '/fraga'
+      preLoaderRoute: typeof AuthenticatedFragaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/installningar': {
       id: '/_authenticated/installningar'
       path: '/installningar'
@@ -249,6 +268,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAktiveraRoute: typeof AuthenticatedAktiveraRoute
+  AuthenticatedFragaRoute: typeof AuthenticatedFragaRoute
   AuthenticatedInstallningarRoute: typeof AuthenticatedInstallningarRoute
   AuthenticatedBarnChildIdRoute: typeof AuthenticatedBarnChildIdRoute
   AuthenticatedFSlugRoute: typeof AuthenticatedFSlugRoute
@@ -257,6 +277,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAktiveraRoute: AuthenticatedAktiveraRoute,
+  AuthenticatedFragaRoute: AuthenticatedFragaRoute,
   AuthenticatedInstallningarRoute: AuthenticatedInstallningarRoute,
   AuthenticatedBarnChildIdRoute: AuthenticatedBarnChildIdRoute,
   AuthenticatedFSlugRoute: AuthenticatedFSlugRoute,

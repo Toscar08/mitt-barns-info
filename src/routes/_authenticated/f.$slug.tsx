@@ -33,7 +33,7 @@ function SlugEntry() {
   }
   return (
     <PrivateGate>
-      <Navigate to="/barn" replace />
+      <Navigate to="/fraga" replace />
     </PrivateGate>
   );
 }

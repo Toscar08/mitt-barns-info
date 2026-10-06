@@ -3,14 +3,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const AskInput = z.object({
-  childId: z.string().uuid(),
+  childId: z.string().uuid().optional(),
   question: z.string().min(2).max(500),
   lang: z.enum(["sv", "en"]).default("sv"),
 });
 
 const NOT_FOUND = {
-  sv: "Jag hittar inte den informationen i mappen.",
-  en: "I can't find that information in the folder.",
+  sv: "Jag hittar inte den informationen i Barnmappen.",
+  en: "I can't find that information in Barnmappen.",
 };
 
 export const askAssistant = createServerFn({ method: "POST" })
@@ -20,22 +20,25 @@ export const askAssistant = createServerFn({ method: "POST" })
     const { supabase } = context;
     const lang = data.lang;
 
-    const [child, entries, tasks, documents] = await Promise.all([
-      supabase.from("children").select("*").eq("id", data.childId).maybeSingle(),
-      supabase
-        .from("entries")
-        .select("category, title, content, updated_at")
-        .eq("child_id", data.childId),
-      supabase.from("tasks").select("title, due_at, done").eq("child_id", data.childId),
-      supabase.from("documents").select("name, created_at").eq("child_id", data.childId),
-    ]);
-
-    if (!child.data) {
+    // RLS limits every query to the signed-in user's own rows.
+    let childQuery = supabase.from("children").select("*");
+    if (data.childId) childQuery = childQuery.eq("id", data.childId);
+    const kids = await childQuery;
+    const list = kids.data ?? [];
+    if (list.length === 0) {
       return { answer: NOT_FOUND[lang] };
     }
+    const ids = list.map((k) => k.id);
+    const [entries, tasks, documents] = await Promise.all([
+      supabase.from("entries").select("child_id, category, title, content, updated_at").in("child_id", ids),
+      supabase.from("tasks").select("child_id, title, due_at, done").in("child_id", ids),
+      supabase.from("documents").select("child_id, name, created_at").in("child_id", ids),
+    ]);
 
-    const c = child.data;
-    const contextText = [
+    const build = (c: (typeof list)[number]) => {
+      const es = (entries.data ?? []).filter((e) => e.child_id === c.id);
+      return [
+      `##### CHILD: ${c.name} #####`,
       "[PERSONAL DETAILS]",
       `Name: ${c.name}`,
       c.birth_date ? `Date of birth: ${c.birth_date}` : null,
@@ -53,29 +56,25 @@ export const askAssistant = createServerFn({ method: "POST" })
       c.notes ? `About the child: ${c.notes}` : null,
       "",
       "[CONTACTS]",
-      ...(entries.data ?? [])
-        .filter((e) => e.category === "contacts")
-        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
+      ...es.filter((e) => e.category === "contacts").map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
       "",
       "[CALENDAR AND ACTIVITIES]",
-      ...(entries.data ?? [])
-        .filter((e) => e.category === "calendar")
-        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
-      ...(tasks.data ?? []).map(
-        (t) =>
-          `- Task: ${t.title}${t.due_at ? ` (due ${t.due_at})` : ""}${t.done ? " [done]" : ""}`,
+      ...es.filter((e) => e.category === "calendar").map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
+      ...(tasks.data ?? []).filter((t) => t.child_id === c.id).map(
+        (t) => `- Task: ${t.title}${t.due_at ? ` (due ${t.due_at})` : ""}${t.done ? " [done]" : ""}`,
       ),
       "",
       "[OWN INFORMATION]",
-      ...(entries.data ?? [])
-        .filter((e) => e.category !== "contacts" && e.category !== "calendar")
-        .map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
+      ...es.filter((e) => e.category !== "contacts" && e.category !== "calendar").map((e) => `- ${e.title}: ${e.content ?? ""}`.trim()),
       "",
       "[DOCUMENTS]",
-      ...(documents.data ?? []).map((d) => `- ${d.name}`),
-    ]
-      .filter((line) => line !== null)
-      .join("\n");
+      ...(documents.data ?? []).filter((d) => d.child_id === c.id).map((d) => `- ${d.name}`),
+      "",
+      ]
+        .filter((line) => line !== null)
+        .join("\n");
+    };
+    const contextText = list.map(build).join("\n");
 
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
@@ -106,7 +105,8 @@ export const askAssistant = createServerFn({ method: "POST" })
           },
         },
         system: [
-          "You answer questions about ONE child, using ONLY the folder content below.",
+          "You answer questions about the children in this family's Barnmappen, using ONLY the folder content below.",
+          "- If several children exist and the question is ambiguous, answer for each child by name.",
           "Hard rules:",
           "- Never use general knowledge, never guess, never assume, never invent anything.",
           "- Answer extremely short and direct: the fact itself, ideally a few words or one short sentence.",
