@@ -40,7 +40,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/barn", replace: true });
+      if (data.session) navigate({ to: "/fraga", replace: true });
     });
   }, [navigate]);
 
@@ -59,11 +59,11 @@ function AuthPage() {
           setSentEmail(true);
           return;
         }
-        navigate({ to: "/barn" });
+        navigate({ to: "/fraga" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/barn" });
+        navigate({ to: "/fraga" });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.error"));
@@ -81,7 +81,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/barn" });
+    navigate({ to: "/fraga" });
   }
 
   return (
