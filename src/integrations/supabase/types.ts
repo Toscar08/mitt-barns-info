@@ -10,10 +10,31 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
+      account_trials: {
+        Row: {
+          created_at: string
+          ends_at: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          starts_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       activation_codes: {
         Row: {
           amount_cents: number | null
@@ -243,6 +264,27 @@ export type Database = {
           },
         ]
       }
+      launch_campaign: {
+        Row: {
+          created_at: string
+          id: boolean
+          started_at: string | null
+          started_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: boolean
+          started_at?: string | null
+          started_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: boolean
+          started_at?: string | null
+          started_by?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           child_id: string
@@ -294,6 +336,78 @@ export type Database = {
           },
         ]
       }
+      trial_claims: {
+        Row: {
+          claimed_at: string
+          claimed_user_id: string
+          identity_hash: string
+        }
+        Insert: {
+          claimed_at?: string
+          claimed_user_id: string
+          identity_hash: string
+        }
+        Update: {
+          claimed_at?: string
+          claimed_user_id?: string
+          identity_hash?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verified_payments: {
+        Row: {
+          amount_cents: number
+          currency: string
+          environment: string
+          id: string
+          provider: string
+          provider_reference: string
+          revoked_at: string | null
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          amount_cents: number
+          currency: string
+          environment: string
+          id?: string
+          provider: string
+          provider_reference: string
+          revoked_at?: string | null
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          currency?: string
+          environment?: string
+          id?: string
+          provider?: string
+          provider_reference?: string
+          revoked_at?: string | null
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           activated_at: string
@@ -338,10 +452,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      campaign_access_status: {
+        Args: {
+          at_time: string
+          launch_at: string
+          trial_end: string
+          verified_paid: boolean
+        }
+        Returns: string
+      }
+      claim_launch_trial: { Args: { target_user: string }; Returns: undefined }
+      get_my_campaign_access: { Args: never; Returns: Json }
+      has_account_access: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      provision_my_workspace: {
+        Args: { new_name?: string; new_slug: string }
+        Returns: string
+      }
+      start_launch_campaign: { Args: { launch_at: string }; Returns: string }
+      trial_window_eligible: {
+        Args: { launch_at: string; registered_at: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -468,6 +609,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
