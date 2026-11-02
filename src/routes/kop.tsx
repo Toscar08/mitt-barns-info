@@ -82,8 +82,8 @@ function BuyPage() {
 
           <div className="mt-6 rounded-lg bg-secondary p-4 text-sm text-secondary-foreground">
             {sv
-              ? "Testläge: betalning är inte kopplad ännu. Du får en aktiveringskod utan att något dras."
-              : "Test mode: payments aren't connected yet. You get an activation code without being charged."}
+              ? "Betalning är inte ansluten ännu. Det går inte att köpa åtkomst just nu. Inga testkoder ger tillgång."
+              : "Payments are not connected yet. Purchases are currently unavailable. Test codes do not grant access."}
           </div>
 
           {code ? (
@@ -131,8 +131,8 @@ function BuyPage() {
                 </span>
               </label>
             </div>
-            <Button className="mt-6 w-full" onClick={buy} disabled={busy || signedIn === null || !agreeTerms || !agreeWithdrawal}>
-              {sv ? "Köp (testläge)" : "Buy (test mode)"}
+            <Button className="mt-6 w-full" onClick={buy} disabled>
+              {sv ? "Betalning kommer snart" : "Payments coming soon"}
             </Button>
             </>
           )}
