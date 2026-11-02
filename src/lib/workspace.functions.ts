@@ -59,7 +59,7 @@ export const activateWorkspace = createServerFn({ method: "POST" })
     const problem = validateSlug(slug);
     if (problem) return { ok: false as const, error: problem };
     // Codes are not proof of payment. The database requires an active trial or verified live payment.
-    const result = await context.supabase.rpc("provision_my_workspace", { new_slug: slug, new_name: data.displayName || undefined });
+    const result = await context.supabase.rpc("provision_my_workspace", { new_slug: slug, new_name: data.displayName || "" });
     if (result.error) return { ok: false as const, error: result.error.code === "23505" ? "taken" : "access_required" };
     return { ok: true as const, slug: result.data };
   });
