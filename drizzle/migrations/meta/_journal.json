@@ -15,6 +15,13 @@
       "when": 1793646447392,
       "tag": "0001_campaign_registry_race_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793647859066,
+      "tag": "0002_trial_starts_at_registration",
+      "breakpoints": true
     }
   ]
 }
