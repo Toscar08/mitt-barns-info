@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/AppHeader";
+import { AccountAccess, useAccountAccess } from "@/components/AccountAccess";
 import { useWorkspace } from "@/components/PrivateGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/aktivera")({
       { name: "description", content: "Aktivera din privata Barnmappen-sida med din aktiveringskod." },
       { property: "og:title", content: "Aktivera din sida – Barnmappen" },
       { property: "og:description", content: "Aktivera din privata sida med aktiveringskoden." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ActivatePage,
@@ -54,6 +57,7 @@ function ActivatePage() {
   const sv = lang === "sv";
   const E = errors[lang];
   const workspace = useWorkspace();
+  const access = useAccountAccess();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const activate = useServerFn(activateWorkspace);
@@ -78,6 +82,8 @@ function ActivatePage() {
     return () => clearTimeout(timer);
   }, [slug, check]);
 
+  if (access.isPending) return null;
+  if (access.error || !access.data || !["trial", "paid"].includes(access.data.status)) return <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl px-6 py-10"><AccountAccess /></main></div>;
   if (workspace.data) return <Navigate to="/f/$slug" params={{ slug: workspace.data.slug }} replace />;
 
   async function submit(event: React.FormEvent) {
@@ -109,21 +115,10 @@ function ActivatePage() {
         <h1 className="mt-4 font-display text-3xl">{sv ? "Aktivera din privata sida" : "Activate your private site"}</h1>
         <p className="mt-2 text-muted-foreground">
           {sv
-            ? "Koden behövs bara en gång. Därefter loggar du in som vanligt."
-            : "The code is only needed once. After that you sign in as usual."}
+            ? "Välj ett namn på din privata sida. Din åtkomst kontrolleras automatiskt."
+            : "Choose a name for your private site. Your access is checked automatically."}
         </p>
         <form onSubmit={submit} className="mt-8 space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="code">{sv ? "Aktiveringskod" : "Activation code"}</Label>
-            <Input
-              id="code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="BM-XXXX-XXXX-XXXX"
-              required
-              className="font-mono"
-            />
-          </div>
           <div className="space-y-2">
             <Label htmlFor="slug">{sv ? "Adressnamn" : "Address name"}</Label>
             <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="familj-a" required />
@@ -144,7 +139,7 @@ function ActivatePage() {
             <Label htmlFor="dn">{sv ? "Namn på sidan (valfritt)" : "Site name (optional)"}</Label>
             <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={sv ? "Familjen Andersson" : "The Andersons"} />
           </div>
-          <Button type="submit" className="w-full" disabled={busy || slugState !== "ok" || code.length < 6}>
+          <Button type="submit" className="w-full" disabled={busy || slugState !== "ok"}>
             {sv ? "Aktivera" : "Activate"}
           </Button>
         </form>

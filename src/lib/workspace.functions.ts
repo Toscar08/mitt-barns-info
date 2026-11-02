@@ -53,75 +53,15 @@ export const checkSlug = createServerFn({ method: "POST" })
 
 export const activateWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z
-      .object({
-        code: z.string().min(6).max(40),
-        slug: z.string().min(3).max(40),
-        displayName: z.string().max(80).optional(),
-      })
-      .parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ code: z.string().max(40).optional(), slug: z.string().min(3).max(40), displayName: z.string().max(80).optional() }).parse(input))
   .handler(async ({ data, context }) => {
     const slug = normalizeSlug(data.slug);
     const problem = validateSlug(slug);
     if (problem) return { ok: false as const, error: problem };
-
-    const existing = await context.supabase
-      .from("workspaces")
-      .select("id, slug")
-      .eq("owner_id", context.userId)
-      .maybeSingle();
-    if (existing.data) return { ok: true as const, slug: existing.data.slug };
-
-    const code = data.code.trim().toUpperCase();
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: codeRow } = await supabaseAdmin
-      .from("activation_codes")
-      .select("id, status")
-      .eq("code", code)
-      .maybeSingle();
-    if (!codeRow) return { ok: false as const, error: "code_unknown" };
-    if (codeRow.status !== "unused") return { ok: false as const, error: "code_used" };
-
-    const { data: created, error: createError } = await supabaseAdmin
-      .from("workspaces")
-      .insert({ owner_id: context.userId, slug, display_name: data.displayName || null })
-      .select("id, slug")
-      .single();
-    if (createError) {
-      const taken = createError.message.includes("workspaces_slug_key");
-      return { ok: false as const, error: taken ? "taken" : "format" };
-    }
-
-    const claim = await supabaseAdmin
-      .from("activation_codes")
-      .update({
-        status: "used",
-        used_by: context.userId,
-        used_at: new Date().toISOString(),
-        workspace_id: created.id,
-      })
-      .eq("id", codeRow.id)
-      .eq("status", "unused")
-      .select("id")
-      .maybeSingle();
-
-    if (!claim.data) {
-      await supabaseAdmin.from("workspaces").delete().eq("id", created.id);
-      return { ok: false as const, error: "code_used" };
-    }
-
-    for (const table of ["children", "entries", "tasks", "documents"] as const) {
-      await supabaseAdmin
-        .from(table)
-        .update({ workspace_id: created.id })
-        .eq("user_id", context.userId)
-        .is("workspace_id", null);
-    }
-
-    return { ok: true as const, slug: created.slug };
+    // Codes are not proof of payment. The database requires an active trial or verified live payment.
+    const result = await context.supabase.rpc("provision_my_workspace", { new_slug: slug, new_name: data.displayName || "" });
+    if (result.error) return { ok: false as const, error: result.error.code === "23505" ? "taken" : "access_required" };
+    return { ok: true as const, slug: result.data };
   });
 
 export const updateWorkspace = createServerFn({ method: "POST" })
@@ -213,31 +153,9 @@ export const myActivationCode = createServerFn({ method: "GET" })
     return data ?? null;
   });
 
-// Test purchase: issues an activation code without charging. Replace with a real
-// checkout + verified payment webhook once payments are enabled for the workspace.
+// Compatibility endpoint: test codes must never grant campaign or paid access.
 export const createTestPurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { generateActivationCode } = await import("@/lib/pin.server");
-    const { data: existing } = await supabaseAdmin
-      .from("activation_codes")
-      .select("code")
-      .eq("provider", "test")
-      .eq("provider_reference", context.userId)
-      .eq("status", "unused")
-      .maybeSingle();
-    if (existing) return { code: existing.code };
-    const code = generateActivationCode();
-    const email = (context.claims as { email?: string }).email ?? null;
-    const { error } = await supabaseAdmin.from("activation_codes").insert({
-      code,
-      email,
-      provider: "test",
-      provider_reference: context.userId,
-      amount_cents: 0,
-      currency: "SEK",
-    });
-    if (error) throw new Error(error.message);
-    return { code };
+  .handler(async (): Promise<{ code: string }> => {
+    throw new Error("Betalning är inte ansluten ännu. Testköp är avstängda.");
   });

@@ -37,6 +37,8 @@ export const Route = createFileRoute("/_authenticated/barn/$childId")({
       },
       { property: "og:title", content: "Barnets mapp – Barnmappen" },
       { property: "og:description", content: "All information om barnet på ett ställe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -108,6 +110,8 @@ function ChildFolder() {
   });
 
   async function exportFolder() {
+    const access = await supabase.rpc("has_account_access");
+    if (access.error || access.data !== true) { toast.error("Åtkomst pausad / Access paused"); return; }
     const payload = {
       exportedAt: new Date().toISOString(),
       child: child.data,
@@ -686,12 +690,17 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
   async function open(doc: Document) {
     const { data, error } = await supabase.storage
       .from(BUCKET)
-      .createSignedUrl(doc.storage_path, 60);
+      .download(doc.storage_path);
     if (error || !data) {
       toast.error(t("docs.openFail"));
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener");
+    const url = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = doc.name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   async function remove(doc: Document) {

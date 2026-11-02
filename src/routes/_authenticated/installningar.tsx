@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { myActivationCode, setPin, updateWorkspace } from "@/lib/workspace.functions";
 import { usePrefs } from "@/lib/prefs";
+import { AccountAccess } from "@/components/AccountAccess";
 
 export const Route = createFileRoute("/_authenticated/installningar")({
   head: () => ({
@@ -19,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/installningar")({
       { name: "description", content: "Hantera adress, namn och PIN-kod för din privata sida." },
       { property: "og:title", content: "Inställningar – Barnmappen" },
       { property: "og:description", content: "Hantera din privata sida." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -76,6 +79,7 @@ function SettingsPage() {
       <AppHeader />
       <main className="mx-auto max-w-2xl space-y-10 px-6 py-10">
         <h1 className="font-display text-3xl">{sv ? "Inställningar" : "Settings"}</h1>
+        <AccountAccess />
 
         <section className="space-y-2 rounded-xl border border-border bg-card p-6">
           <h2 className="font-display text-xl">{sv ? "Din adress" : "Your address"}</h2>

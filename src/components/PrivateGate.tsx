@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { biometricEnrolled, verifyBiometric } from "@/lib/biometric";
 import { getMyWorkspace, unlockWithPin } from "@/lib/workspace.functions";
 import { usePrefs } from "@/lib/prefs";
+import { AccountAccess, useAccountAccess } from "@/components/AccountAccess";
+import { AppHeader } from "@/components/AppHeader";
 
 const UNLOCK_KEY = "barnmappen.unlocked";
 const ACTIVE_KEY = "barnmappen.lastActive";
@@ -32,6 +34,7 @@ function stillUnlocked(id: string) {
 
 export function PrivateGate({ children }: { children: ReactNode }) {
   const workspace = useWorkspace();
+  const access = useAccountAccess();
   const { lang } = usePrefs();
   const unlock = useServerFn(unlockWithPin);
   const [unlocked, setUnlocked] = useState(false);
@@ -96,7 +99,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
     };
   }, [ws, unlocked, tryBiometric]);
 
-  if (workspace.isLoading) {
+  if (workspace.isLoading || access.isPending) {
     return <div className="min-h-screen bg-background" />;
   }
   if (workspace.error) {
@@ -106,6 +109,9 @@ export function PrivateGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
+  if (access.error || !access.data || !["paid", "trial"].includes(access.data.status)) return (
+    <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl space-y-6 px-6 py-10"><AccountAccess /></main></div>
+  );
   if (!ws) return <Navigate to="/aktivera" replace />;
   if (!ws.hasPin || unlocked) return <>{children}</>;
 

@@ -10,6 +10,8 @@ export const Route = createFileRoute("/_authenticated/f/$slug")({
       { name: "description", content: "Din privata Barnmappen-sida. Kräver alltid inloggning." },
       { property: "og:title", content: "Min privata sida – Barnmappen" },
       { property: "og:description", content: "Privat sida som kräver inloggning." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
