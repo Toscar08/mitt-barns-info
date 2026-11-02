@@ -8,6 +8,13 @@
       "when": 1792323581661,
       "tag": "0000_launch_campaign_access",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793646447392,
+      "tag": "0001_campaign_registry_race_guard",
+      "breakpoints": true
     }
   ]
 }
