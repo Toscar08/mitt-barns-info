@@ -37,6 +37,8 @@ export const Route = createFileRoute("/_authenticated/barn/$childId")({
       },
       { property: "og:title", content: "Barnets mapp – Barnmappen" },
       { property: "og:description", content: "All information om barnet på ett ställe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (
@@ -108,6 +110,8 @@ function ChildFolder() {
   });
 
   async function exportFolder() {
+    const access = await supabase.rpc("has_account_access");
+    if (access.error || access.data !== true) { toast.error("Åtkomst pausad / Access paused"); return; }
     const payload = {
       exportedAt: new Date().toISOString(),
       child: child.data,

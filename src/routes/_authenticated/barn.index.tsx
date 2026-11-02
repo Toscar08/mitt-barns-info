@@ -22,6 +22,8 @@ export const Route = createFileRoute("/_authenticated/barn/")({
       },
       { property: "og:title", content: "Mina barn – Barnmappen" },
       { property: "og:description", content: "Översikt över dina barns digitala mappar." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

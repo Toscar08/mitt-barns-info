@@ -27,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/aktivera")({
       { name: "description", content: "Aktivera din privata Barnmappen-sida med din aktiveringskod." },
       { property: "og:title", content: "Aktivera din sida – Barnmappen" },
       { property: "og:description", content: "Aktivera din privata sida med aktiveringskoden." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ActivatePage,

@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/installningar")({
       { name: "description", content: "Hantera adress, namn och PIN-kod för din privata sida." },
       { property: "og:title", content: "Inställningar – Barnmappen" },
       { property: "og:description", content: "Hantera din privata sida." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: () => (

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getAccountAccess, startCampaign } from "@/lib/access.functions";
 import { usePrefs } from "@/lib/prefs";
@@ -11,7 +11,20 @@ import { Label } from "@/components/ui/label";
 
 export function useAccountAccess() {
   const fetchAccess = useServerFn(getAccountAccess);
-  return useQuery({ queryKey: ["account-access"], queryFn: () => fetchAccess(), refetchInterval: 30000, refetchOnWindowFocus: "always" });
+  const query = useQuery({ queryKey: ["account-access"], queryFn: () => fetchAccess(), refetchOnWindowFocus: "always" });
+  const [expired, setExpired] = useState(false);
+  useEffect(() => {
+    setExpired(false);
+    if (query.data?.status !== "trial") return;
+    const delay = query.data.remainingSeconds * 1000;
+    // Re-arm long deadlines rather than overflowing browser timer limits.
+    const timer = setTimeout(() => {
+      if (delay <= 2147483647) setExpired(true);
+      void query.refetch();
+    }, Math.min(delay, 2147483647));
+    return () => clearTimeout(timer);
+  }, [query.dataUpdatedAt]);
+  return { ...query, data: expired && query.data ? { ...query.data, status: "paused" as const, remainingSeconds: 0 } : query.data };
 }
 export function AccountAccess() {
   const access = useAccountAccess();

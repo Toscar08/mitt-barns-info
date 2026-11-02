@@ -20,6 +20,8 @@ export const Route = createFileRoute("/auth")({
         content: "Logga in eller skapa ett konto för att komma åt dina barns digitala mappar.",
       },
       { property: "og:title", content: "Logga in – Barnmappen" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       {
         property: "og:description",
         content: "Logga in för att komma åt dina barns digitala mappar.",
