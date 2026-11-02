@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Campaign entitlements live in protected account_trials and verified_payments tables, not owner-editable workspaces; restrictive RLS covers every private table and Storage.
+- Account access is derived from database time, without recurring jobs; this preserves exact expiry without idle polling costs.
+- Only authenticated admin RPC may save the actual first publication timestamp once; never start campaigns from page loads or republishing.
+- Keep trial identity hashes in a server-only salted registry; email aliases are normalized without device fingerprinting or collection of identity documents.
+- Live Stripe verification is the only paid entitlement source; test activation codes must not grant access.
