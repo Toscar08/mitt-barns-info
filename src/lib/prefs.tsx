@@ -54,6 +54,14 @@ const dict = {
     "auth.toSignIn": "Har du redan ett konto? Logga in",
     "auth.encrypted": "Krypterad överföring. Inloggning krävs alltid",
     "auth.error": "Något gick fel",
+    "auth.forgot": "Glömt lösenord?",
+    "auth.forgotNeedEmail": "Skriv först in din e-postadress ovan.",
+    "auth.forgotSent":
+      "Om ett konto finns med den adressen har vi skickat en länk för att välja nytt lösenord.",
+    "reset.title": "Välj nytt lösenord",
+    "reset.save": "Spara nytt lösenord",
+    "reset.invalid": "Länken är ogiltig eller har gått ut. Begär en ny från inloggningssidan.",
+    "reset.done": "Lösenordet är bytt.",
 
     "children.title": "Mina barn",
     "children.lead": "Varje barn har sin egen mapp med information, dokument och uppgifter.",
@@ -191,6 +199,14 @@ const dict = {
     "auth.toSignIn": "Already have an account? Sign in",
     "auth.encrypted": "Encrypted transfer. Sign-in always required",
     "auth.error": "Something went wrong",
+    "auth.forgot": "Forgot password?",
+    "auth.forgotNeedEmail": "Enter your email address above first.",
+    "auth.forgotSent":
+      "If an account exists for that address, we have sent a link to choose a new password.",
+    "reset.title": "Choose a new password",
+    "reset.save": "Save new password",
+    "reset.invalid": "The link is invalid or has expired. Request a new one from the sign-in page.",
+    "reset.done": "Your password has been changed.",
 
     "children.title": "My children",
     "children.lead": "Every child has their own folder with information, documents and tasks.",

@@ -153,6 +153,24 @@ function AuthPage() {
                 </Button>
               </form>
 
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  className="mt-4 w-full text-sm text-muted-foreground underline-offset-4 hover:underline"
+                  onClick={async () => {
+                    if (!email) {
+                      toast.error(t("auth.forgotNeedEmail"));
+                      return;
+                    }
+                    await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: window.location.origin + "/aterstall-losenord",
+                    });
+                    toast.success(t("auth.forgotSent"));
+                  }}
+                >
+                  {t("auth.forgot")}
+                </button>
+              )}
               <button
                 type="button"
                 className="mt-5 w-full text-sm text-muted-foreground underline-offset-4 hover:underline"

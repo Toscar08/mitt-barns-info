@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AterstallLosenordRouteImport } from './routes/aterstall-losenord'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IntegritetspolicyRouteImport } from './routes/integritetspolicy'
 import { Route as KopRouteImport } from './routes/kop'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AterstallLosenordRoute = AterstallLosenordRouteImport.update({
+  id: '/aterstall-losenord',
+  path: '/aterstall-losenord',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -86,6 +92,7 @@ const AuthenticatedFSlugRoute = AuthenticatedFSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aterstall-losenord': typeof AterstallLosenordRoute
   '/auth': typeof AuthRoute
   '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aterstall-losenord': typeof AterstallLosenordRoute
   '/auth': typeof AuthRoute
   '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/aterstall-losenord': typeof AterstallLosenordRoute
   '/auth': typeof AuthRoute
   '/integritetspolicy': typeof IntegritetspolicyRoute
   '/kop': typeof KopRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/aterstall-losenord'
     | '/auth'
     | '/integritetspolicy'
     | '/kop'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aterstall-losenord'
     | '/auth'
     | '/integritetspolicy'
     | '/kop'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/aterstall-losenord'
     | '/auth'
     | '/integritetspolicy'
     | '/kop'
@@ -171,6 +183,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AterstallLosenordRoute: typeof AterstallLosenordRoute
   AuthRoute: typeof AuthRoute
   IntegritetspolicyRoute: typeof IntegritetspolicyRoute
   KopRoute: typeof KopRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aterstall-losenord': {
+      id: '/aterstall-losenord'
+      path: '/aterstall-losenord'
+      fullPath: '/aterstall-losenord'
+      preLoaderRoute: typeof AterstallLosenordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -290,6 +310,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AterstallLosenordRoute: AterstallLosenordRoute,
   AuthRoute: AuthRoute,
   IntegritetspolicyRoute: IntegritetspolicyRoute,
   KopRoute: KopRoute,
