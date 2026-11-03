@@ -88,6 +88,38 @@ export type Database = {
           },
         ]
       }
+      child_calendars: {
+        Row: {
+          child_id: string
+          created_at: string
+          last_synced_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          last_synced_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          last_synced_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_calendars_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: true
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           allergies: string | null
@@ -291,6 +323,7 @@ export type Database = {
           created_at: string
           done: boolean
           due_at: string | null
+          external_uid: string | null
           id: string
           title: string
           updated_at: string
@@ -302,6 +335,7 @@ export type Database = {
           created_at?: string
           done?: boolean
           due_at?: string | null
+          external_uid?: string | null
           id?: string
           title: string
           updated_at?: string
@@ -313,6 +347,7 @@ export type Database = {
           created_at?: string
           done?: boolean
           due_at?: string | null
+          external_uid?: string | null
           id?: string
           title?: string
           updated_at?: string
