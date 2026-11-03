@@ -38,7 +38,7 @@ function tzOffset(tz: string, utc: number): number {
 function parseDate(value: string, tz: string): number | null {
   const m = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);
   if (!m) return null;
-  const local = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] ?? 9), +(m[5] ?? 0), +(m[6] ?? 0));
+  const local = Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +(m[4] ?? 9), +(m[5] ?? 0), +(m[6] ?? 0));
   if (m[7]) return local;
   return local - tzOffset(tz, local);
 }
