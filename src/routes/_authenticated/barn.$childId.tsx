@@ -1,4 +1,5 @@
 import { PrivateGate } from "@/components/PrivateGate";
+import { CalendarLink } from "@/components/CalendarLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -222,6 +223,7 @@ function ChildFolder() {
             />
           </TabsContent>
           <TabsContent value="calendar">
+            <CalendarLink childId={childId} />
             <Entries
               childId={childId}
               category="calendar"
