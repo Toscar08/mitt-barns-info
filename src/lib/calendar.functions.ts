@@ -48,7 +48,7 @@ type Ev = { uid: string; title: string; start: number };
 export function parseIcs(text: string, from: number, to: number): Ev[] {
   const lines = text.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
   const out: Ev[] = [];
-  let cur: Record<string, { params: string; value: string }> | null = null;
+  let cur: any = null;
   for (const line of lines) {
     if (line === "BEGIN:VEVENT") { cur = {}; continue; }
     if (line === "END:VEVENT" && cur) {
@@ -59,8 +59,8 @@ export function parseIcs(text: string, from: number, to: number): Ev[] {
       if (start !== null && cur.STATUS?.value !== "CANCELLED") {
         const rule = cur.RRULE?.value;
         if (rule) {
-          const r = Object.fromEntries(rule.split(";").map((p) => p.split("=")));
-          const step = { DAILY: 1, WEEKLY: 7 }[r.FREQ as string];
+          const r: any = Object.fromEntries(rule.split(";").map((p: string) => p.split("=")));
+          const step = ({ DAILY: 1, WEEKLY: 7 } as Record<string, number>)[r.FREQ];
           if (step) {
             const interval = (Number(r.INTERVAL) || 1) * step * 86400000;
             const until = r.UNTIL ? parseDate(r.UNTIL, tzid) ?? to : to;
@@ -78,7 +78,7 @@ export function parseIcs(text: string, from: number, to: number): Ev[] {
     if (!cur) continue;
     const idx = line.indexOf(":");
     if (idx < 0) continue;
-    const [name, ...params] = line.slice(0, idx).split(";");
+    const [name = "", ...params] = line.slice(0, idx).split(";");
     if (!cur[name]) cur[name] = { params: params.join(";"), value: line.slice(idx + 1) };
   }
   return out.sort((a, b) => a.start - b.start).slice(0, MAX_EVENTS);
