@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { createTestPurchase } from "@/lib/workspace.functions";
+import { createStripeCheckout } from "@/lib/payments.functions";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/kop")({
@@ -29,9 +29,8 @@ export const Route = createFileRoute("/kop")({
 function BuyPage() {
   const { lang } = usePrefs();
   const sv = lang === "sv";
-  const purchase = useServerFn(createTestPurchase);
+  const checkout = useServerFn(createStripeCheckout);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeWithdrawal, setAgreeWithdrawal] = useState(false);
@@ -43,11 +42,10 @@ function BuyPage() {
   async function buy() {
     setBusy(true);
     try {
-      const res = await purchase();
-      setCode(res.code);
+      const { url } = await checkout({ origin: window.location.origin });
+      window.location.href = url;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
       setBusy(false);
     }
   }
@@ -82,26 +80,11 @@ function BuyPage() {
 
           <div className="mt-6 rounded-lg bg-secondary p-4 text-sm text-secondary-foreground">
             {sv
-              ? "Betalning är inte ansluten ännu. Det går inte att köpa åtkomst just nu. Inga testkoder ger tillgång."
-              : "Payments are not connected yet. Purchases are currently unavailable. Test codes do not grant access."}
+              ? "Betalningen hanteras säkert av Stripe. Åtkomsten öppnas automatiskt när betalningen är verifierad."
+              : "Payment is handled securely by Stripe. Access opens automatically once your payment is verified."}
           </div>
 
-          {code ? (
-            <div className="mt-6 space-y-4 text-center">
-              <p className="text-sm text-muted-foreground">{sv ? "Din aktiveringskod" : "Your activation code"}</p>
-              <p className="font-mono text-2xl tracking-wider">{code}</p>
-              <img
-                className="mx-auto rounded-lg bg-white p-2"
-                width={180}
-                height={180}
-                alt={sv ? "QR-kod för aktivering" : "Activation QR code"}
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/aktivera?code=${code}`)}`}
-              />
-              <Button asChild className="w-full">
-                <Link to="/aktivera" search={{ code }}>{sv ? "Aktivera nu" : "Activate now"}</Link>
-              </Button>
-            </div>
-          ) : signedIn === false ? (
+          {signedIn === false ? (
             <div className="mt-6 space-y-3">
               <p className="text-sm text-muted-foreground">
                 {sv ? "Skapa först ett konto, sedan genomför du köpet." : "Create an account first, then complete the purchase."}
@@ -131,8 +114,8 @@ function BuyPage() {
                 </span>
               </label>
             </div>
-            <Button className="mt-6 w-full" onClick={buy} disabled>
-              {sv ? "Betalning kommer snart" : "Payments coming soon"}
+            <Button className="mt-6 w-full" onClick={buy} disabled={busy || !agreeTerms || !agreeWithdrawal}>
+              {sv ? "Betala 499 kr med Stripe" : "Pay 499 kr with Stripe"}
             </Button>
             </>
           )}
