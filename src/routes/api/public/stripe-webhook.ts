@@ -14,8 +14,8 @@ const Session = z.object({
 
 async function verifySignature(body: string, header: string, secret: string) {
   const parts = Object.fromEntries(header.split(",").map((p) => p.split("=", 2) as [string, string]));
-  const t = Number(parts.t);
-  const v1 = parts.v1;
+  const t = Number(parts["t"]);
+  const v1 = parts["v1"];
   if (!t || !v1 || Math.abs(Date.now() / 1000 - t) > 300) return false;
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${t}.${body}`));
