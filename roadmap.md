@@ -7,4 +7,5 @@
 - [ ] First live launch timestamp: administrator must save actual first publication time after publishing.
 - [x] Trial only for registrations inside the 30-day launch window; admin one-time start button.
 - [x] Stripe webhook prepared (signature-verified, live-only, 499 SEK).
-- [ ] Stripe checkout + STRIPE_WEBHOOK_SECRET: needs the owner's Stripe account.
+- [x] Stripe checkout created server-side; buy button opens Stripe Checkout (499 SEK, one-time).
+- [ ] Owner adds STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET and points the Stripe webhook at /api/public/stripe-webhook.

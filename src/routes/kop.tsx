@@ -84,22 +84,7 @@ function BuyPage() {
               : "Payment is handled securely by Stripe. Access opens automatically once your payment is verified."}
           </div>
 
-          {code ? (
-            <div className="mt-6 space-y-4 text-center">
-              <p className="text-sm text-muted-foreground">{sv ? "Din aktiveringskod" : "Your activation code"}</p>
-              <p className="font-mono text-2xl tracking-wider">{code}</p>
-              <img
-                className="mx-auto rounded-lg bg-white p-2"
-                width={180}
-                height={180}
-                alt={sv ? "QR-kod för aktivering" : "Activation QR code"}
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/aktivera?code=${code}`)}`}
-              />
-              <Button asChild className="w-full">
-                <Link to="/aktivera" search={{ code }}>{sv ? "Aktivera nu" : "Activate now"}</Link>
-              </Button>
-            </div>
-          ) : signedIn === false ? (
+          {signedIn === false ? (
             <div className="mt-6 space-y-3">
               <p className="text-sm text-muted-foreground">
                 {sv ? "Skapa först ett konto, sedan genomför du köpet." : "Create an account first, then complete the purchase."}
@@ -129,8 +114,8 @@ function BuyPage() {
                 </span>
               </label>
             </div>
-            <Button className="mt-6 w-full" onClick={buy} disabled>
-              {sv ? "Betalning kommer snart" : "Payments coming soon"}
+            <Button className="mt-6 w-full" onClick={buy} disabled={busy || !agreeTerms || !agreeWithdrawal}>
+              {sv ? "Betala 499 kr med Stripe" : "Pay 499 kr with Stripe"}
             </Button>
             </>
           )}
