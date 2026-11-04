@@ -20,7 +20,7 @@ export const startCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     // Uses server time; the database refuses a second start.
-    const result = await context.supabase.rpc("start_launch_campaign", { launch_at: new Date().toISOString() });
+    const result = await context.supabase.rpc("start_launch_campaign", { launch_at: new Date(Date.now() - 1000).toISOString() });
     if (result.error) throw new Error("Starten kunde inte sparas. Kontrollera tid, behörighet och att kampanjen inte redan startat.");
     return result.data;
   });

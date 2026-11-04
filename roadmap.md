@@ -5,4 +5,6 @@
 - [x] Exact SQL boundary tests and signed-in prelaunch/purchase checks.
 - [ ] Full rollback integration tests: blocked by sandbox database test permissions.
 - [ ] First live launch timestamp: administrator must save actual first publication time after publishing.
-- [ ] Verified Stripe checkout/webhook and real payment readback: no payment integration connected.
+- [x] Trial only for registrations inside the 30-day launch window; admin one-time start button.
+- [x] Stripe webhook prepared (signature-verified, live-only, 499 SEK).
+- [ ] Stripe checkout + STRIPE_WEBHOOK_SECRET: needs the owner's Stripe account.
