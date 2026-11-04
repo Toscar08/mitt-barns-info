@@ -29,9 +29,8 @@ export const Route = createFileRoute("/kop")({
 function BuyPage() {
   const { lang } = usePrefs();
   const sv = lang === "sv";
-  const purchase = useServerFn(createTestPurchase);
+  const checkout = useServerFn(createStripeCheckout);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeWithdrawal, setAgreeWithdrawal] = useState(false);
@@ -43,11 +42,10 @@ function BuyPage() {
   async function buy() {
     setBusy(true);
     try {
-      const res = await purchase();
-      setCode(res.code);
+      const { url } = await checkout({ origin: window.location.origin });
+      window.location.href = url;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
       setBusy(false);
     }
   }
@@ -82,8 +80,8 @@ function BuyPage() {
 
           <div className="mt-6 rounded-lg bg-secondary p-4 text-sm text-secondary-foreground">
             {sv
-              ? "Betalning är inte ansluten ännu. Det går inte att köpa åtkomst just nu. Inga testkoder ger tillgång."
-              : "Payments are not connected yet. Purchases are currently unavailable. Test codes do not grant access."}
+              ? "Betalningen hanteras säkert av Stripe. Åtkomsten öppnas automatiskt när betalningen är verifierad."
+              : "Payment is handled securely by Stripe. Access opens automatically once your payment is verified."}
           </div>
 
           {code ? (
