@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { createTestPurchase } from "@/lib/workspace.functions";
+import { createStripeCheckout } from "@/lib/payments.functions";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/kop")({
