@@ -18,9 +18,9 @@ export const getAccountAccess = createServerFn({ method: "GET" })
   });
 export const startCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ launchAt: z.string().datetime() }).parse(input))
-  .handler(async ({ context, data }) => {
-    const result = await context.supabase.rpc("start_launch_campaign", { launch_at: data.launchAt });
+  .handler(async ({ context }) => {
+    // Uses server time; the database refuses a second start.
+    const result = await context.supabase.rpc("start_launch_campaign", { launch_at: new Date(Date.now() - 1000).toISOString() });
     if (result.error) throw new Error("Starten kunde inte sparas. Kontrollera tid, behörighet och att kampanjen inte redan startat.");
     return result.data;
   });

@@ -22,6 +22,7 @@ import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authen
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
 import { Route as AuthenticatedFSlugRouteImport } from './routes/_authenticated/f.$slug'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -89,6 +90,11 @@ const AuthenticatedFSlugRoute = AuthenticatedFSlugRouteImport.update({
   path: '/f/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/barn/': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRoutesByTo {
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/barn': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRoutesById {
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/barn/': typeof AuthenticatedBarnIndexRoute
 }
 export interface FileRouteTypes {
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
+    | '/api/public/stripe-webhook'
     | '/barn/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/installningar'
     | '/barn/$childId'
     | '/f/$slug'
+    | '/api/public/stripe-webhook'
     | '/barn'
   id:
     | '__root__'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/installningar'
     | '/_authenticated/barn/$childId'
     | '/_authenticated/f/$slug'
+    | '/api/public/stripe-webhook'
     | '/_authenticated/barn/'
   fileRoutesById: FileRoutesById
 }
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   IntegritetspolicyRoute: typeof IntegritetspolicyRoute
   KopRoute: typeof KopRoute
   VillkorRoute: typeof VillkorRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegritetspolicyRoute: IntegritetspolicyRoute,
   KopRoute: KopRoute,
   VillkorRoute: VillkorRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
