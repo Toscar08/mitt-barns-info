@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // Creates a Stripe Checkout session (499 SEK, one-time payment).
 // Access is granted exclusively by the signature-verified webhook that stores a
 // live-mode payment; the checkout response itself never grants access.
-const ALLOWED_ORIGINS = /^https:\/\/([a-z0-9-]+\.lovable\.app|localhost(?::\d+)?)$/;
+const ALLOWED_ORIGINS = /^(https:\/\/[a-z0-9-]+\.lovable\.app|http:\/\/localhost(?::\d+))$/;
 
 export const createStripeCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
