@@ -42,7 +42,7 @@ function BuyPage() {
   async function buy() {
     setBusy(true);
     try {
-      const { url } = await checkout({ origin: window.location.origin });
+      const { url } = await checkout({ data: { origin: window.location.origin } });
       window.location.href = url;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
