@@ -83,7 +83,7 @@ function ActivatePage() {
   }, [slug, check]);
 
   if (access.isPending) return null;
-  if (access.error || !access.data || !["trial", "paid"].includes(access.data.status)) return <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl px-6 py-10"><AccountAccess /></main></div>;
+  if (access.error || !access.data || !["trial", "paid", "complimentary"].includes(access.data.status)) return <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl px-6 py-10"><AccountAccess /></main></div>;
   if (workspace.data) return <Navigate to="/f/$slug" params={{ slug: workspace.data.slug }} replace />;
 
   async function submit(event: React.FormEvent) {

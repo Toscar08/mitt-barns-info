@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Access = z.object({
-  status: z.enum(["paid", "trial", "paused", "launch_pending"]),
+  status: z.enum(["paid", "trial", "complimentary", "paused", "launch_pending"]),
   serverNow: z.string(), launchStartedAt: z.string().nullable(),
   trialStartsAt: z.string().nullable(), trialEndsAt: z.string().nullable(),
   remainingSeconds: z.number(), isAdmin: z.boolean(),
