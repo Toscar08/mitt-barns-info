@@ -47,7 +47,7 @@ export function AccountAccess() {
   const sv = lang === "sv";
   const a = access.data;
   if (!a) return <p>{access.error ? (sv ? "Åtkomsten kunde inte kontrolleras." : "Access could not be checked.") : (sv ? "Kontrollerar åtkomst…" : "Checking access…")}</p>;
-  const labels = { paid: sv ? "Betald åtkomst" : "Paid access", trial: sv ? "Gratis åtkomst" : "Free access", paused: sv ? "Åtkomst pausad" : "Access paused", launch_pending: sv ? "Lanseringen har inte startat" : "Launch has not started" };
+  const labels = { paid: sv ? "Betald åtkomst" : "Paid access", complimentary: sv ? "Kostnadsfri åtkomst utan slutdatum" : "Complimentary access with no expiry", trial: sv ? "Gratis åtkomst" : "Free access", paused: sv ? "Åtkomst pausad" : "Access paused", launch_pending: sv ? "Lanseringen har inte startat" : "Launch has not started" };
   const date = (value: string) => new Date(value).toLocaleString(locale);
   return <section className="space-y-4 border-b border-border pb-8">
     <h2 className="font-display text-2xl">{labels[a.status]}</h2>
@@ -56,7 +56,7 @@ export function AccountAccess() {
       <div><dt className="text-muted-foreground">{sv ? "Gratisperiodens slut" : "Trial ends"}</dt><dd>{date(a.trialEndsAt)}</dd></div>
       {a.status === "trial" && <div><dt className="text-muted-foreground">{sv ? "Återstår" : "Remaining"}</dt><dd>{Math.floor(a.remainingSeconds / 86400)} {sv ? "dagar" : "days"}, {Math.floor(a.remainingSeconds % 86400 / 3600)} {sv ? "timmar" : "hours"}, {Math.floor(a.remainingSeconds % 3600 / 60)} {sv ? "minuter" : "minutes"}</dd></div>}
     </dl>}
-    {a.status !== "paid" && <p className="text-sm text-muted-foreground">{sv ? "När gratisperioden löper ut pausas barnmappar, dokument och assistenten. Dina uppgifter raderas inte. Åtkomsten återställs först efter verifierad betalning." : "When the trial expires, folders, documents and the assistant pause. Your data is not deleted. Access resumes only after verified payment."}</p>}
+    {!["paid", "complimentary"].includes(a.status) && <p className="text-sm text-muted-foreground">{sv ? "När gratisperioden löper ut pausas barnmappar, dokument och assistenten. Dina uppgifter raderas inte. Åtkomsten återställs först efter verifierad betalning." : "When the trial expires, folders, documents and the assistant pause. Your data is not deleted. Access resumes only after verified payment."}</p>}
     {a.isAdmin && !a.launchStartedAt && <LaunchStarter />}
     {a.status === "paused" && <Button asChild><Link to="/kop">{sv ? "Köp åtkomst" : "Buy access"}</Link></Button>}
   </section>;

@@ -14,3 +14,4 @@
 - Only authenticated admin RPC may save the actual first publication timestamp once; never start campaigns from page loads or republishing.
 - Keep trial identity hashes in a server-only salted registry; email aliases are normalized without device fingerprinting or collection of identity documents.
 - Live Stripe verification is the only paid entitlement source; test activation codes must not grant access.
+- Complimentary access is stored in a separate protected grant table and checked by both access RPCs; this avoids fabricated payments or administrator privileges.

@@ -194,6 +194,27 @@ export type Database = {
           },
         ]
       }
+      complimentary_access: {
+        Row: {
+          granted_at: string
+          reason: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          reason: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          reason?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           child_id: string

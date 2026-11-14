@@ -1,4 +1,5 @@
 # Launch campaign
+- [x] Grant the requested account complimentary private access without paid records or administrator privileges.
 - [x] Permanent one-time launch setting and registration-based trial eligibility.
 - [x] Server/database/storage access enforcement and safe paused-account screen.
 - [x] Trial account details and trial workspace activation; disable test-payment bypass.

@@ -109,7 +109,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (access.error || !access.data || !["paid", "trial"].includes(access.data.status)) return (
+  if (access.error || !access.data || !["paid", "trial", "complimentary"].includes(access.data.status)) return (
     <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl space-y-6 px-6 py-10"><AccountAccess /></main></div>
   );
   if (!ws) return <Navigate to="/aktivera" replace />;
