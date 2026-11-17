@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy } from "lucide-react";
@@ -16,6 +16,9 @@ import { AccountAccess } from "@/components/AccountAccess";
 import { DeleteAccount } from "@/components/DeleteAccount";
 
 export const Route = createFileRoute("/_authenticated/installningar")({
+  validateSearch: (search: Record<string, unknown>): { betalt?: boolean | undefined } => ({
+    betalt: search["betalt"] === 1 || search["betalt"] === "1" || search["betalt"] === true ? true : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Inställningar – Barnmappen" },
@@ -42,6 +45,20 @@ function SettingsPage() {
   const savePin = useServerFn(setPin);
   const fetchCode = useServerFn(myActivationCode);
   const code = useQuery({ queryKey: ["activation-code"], queryFn: () => fetchCode() });
+
+  // Back from Stripe. The payment reaches us through the webhook a moment later, so look again a few times.
+  const { betalt } = Route.useSearch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!betalt) return;
+    toast.success(sv ? "Tack! Din prenumeration är på väg att aktiveras." : "Thank you! Your subscription is being activated.");
+    const timers = [2000, 5000, 10000, 20000].map((ms) =>
+      setTimeout(() => void queryClient.invalidateQueries({ queryKey: ["account-access"] }), ms),
+    );
+    void navigate({ to: "/installningar", search: {}, replace: true });
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [betalt]);
 
   const [slug, setSlug] = useState("");
   const [displayName, setDisplayName] = useState("");

@@ -15,3 +15,4 @@
 - Keep trial identity hashes in a server-only salted registry; email aliases are normalized without device fingerprinting or collection of identity documents.
 - Live Stripe verification is the only paid entitlement source; test activation codes must not grant access.
 - Complimentary access is stored in a separate protected grant table and checked by both access RPCs; this avoids fabricated payments or administrator privileges.
+- Subscriptions: each signature-verified live `invoice.paid` stores one verified_payments row (plan monthly 3900 / yearly 34900 öre) with access_until = period end + 3 days; lifetime 49900 rows keep access_until NULL. Prices live in src/lib/pricing.ts and the payment_plan CHECK, and must change together.

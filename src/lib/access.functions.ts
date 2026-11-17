@@ -7,6 +7,9 @@ const Access = z.object({
   serverNow: z.string(), launchStartedAt: z.string().nullable(),
   trialStartsAt: z.string().nullable(), trialEndsAt: z.string().nullable(),
   remainingSeconds: z.number(), isAdmin: z.boolean(),
+  // Added with subscriptions (migration 0006). Optional, so the page works before the migration is applied.
+  paidPlan: z.enum(["lifetime", "monthly", "yearly"]).nullable().optional(),
+  paidUntil: z.string().nullable().optional(),
 });
 export type AccountAccess = z.infer<typeof Access>;
 export const getAccountAccess = createServerFn({ method: "GET" })

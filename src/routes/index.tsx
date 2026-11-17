@@ -9,6 +9,7 @@ import { PrefToggles } from "@/components/PrefToggles";
 import { supabase } from "@/integrations/supabase/client";
 import { usePrefs } from "@/lib/prefs";
 import heroImage from "@/assets/hero.webp";
+import { kronor, PLANS, yearlyPerMonth } from "@/lib/pricing";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,11 +53,11 @@ function Landing() {
     return () => data.subscription.unsubscribe();
   }, [navigate]);
 
-  const cta = signedIn ? t("landing.ctaIn") : L("Skaffa Barnmappen – 499 kr", "Get Barnmappen – 499 kr");
+  const cta = signedIn ? t("landing.ctaIn") : L(`Skaffa Barnmappen – från ${yearlyPerMonth} kr/mån`, `Get Barnmappen – from ${yearlyPerMonth} kr/mo`);
   const ctaTo = signedIn ? "/barn" : "/kop";
 
   const promises = [
-    L("Engångsköp, inget abonnemang", "One-time purchase, no subscription"),
+    L("Avsluta när du vill", "Cancel anytime"),
     L("Ingen reklam, ingen såld data", "No ads, no data sold"),
     L("Exportera eller radera när du vill", "Export or delete anytime"),
   ];
@@ -94,7 +95,7 @@ function Landing() {
   const faq = [
     [L("Vem kan se mitt barns information?", "Who can see my child's information?"), L("Bara den som loggar in på ert konto. Andra familjer kan aldrig se er sida, inte ens om de känner till adressen.", "Only whoever signs in to your account. Other families can never see your page, even if they know the address.")],
     [L("Vad gör AI-assistenten med uppgifterna?", "What does the AI do with my data?"), L("Den läser bara det du själv skrivit i barnets mapp när du ställer en fråga. Den ersätter inte vård – vid akut fara ring 112, för råd ring 1177.", "It only reads what you wrote in the child's folder when you ask. It does not replace healthcare – call 112 in emergencies.")],
-    [L("Tillkommer några avgifter?", "Are there any other fees?"), L("Nej. 499 kr inkl. moms betalas en gång. Inget abonnemang.", "No. 499 kr incl. VAT is paid once. No subscription.")],
+    [L("Tillkommer några avgifter?", "Are there any other fees?"), L(`Nej. Du väljer ${kronor(PLANS.monthly.amount)} kr/mån eller ${kronor(PLANS.yearly.amount)} kr/år inkl. moms, och kan avsluta när du vill.`, `No. You choose ${kronor(PLANS.monthly.amount)} kr/month or ${kronor(PLANS.yearly.amount)} kr/year incl. VAT, and can cancel anytime.`)],
     [L("Kan jag ta med mig min information?", "Can I take my data with me?"), L("Ja. Exportera hela barnmappen som en fil och återställ den när du vill.", "Yes. Export the whole folder as a file and restore it whenever you like.")],
   ];
 
@@ -181,9 +182,9 @@ function Landing() {
         <section id="ingar" className="surface mt-16 scroll-mt-24 overflow-hidden p-7 md:mt-20 md:p-12">
           <div className="grid gap-10 md:grid-cols-[1fr_1.1fr] md:items-center">
             <div>
-              <p className="text-sm font-medium text-accent">{L("Ett pris. En gång.", "One price. Once.")}</p>
-              <p className="mt-3 text-6xl font-semibold tracking-tight tabular-nums md:text-7xl">499 kr</p>
-              <p className="mt-2 text-muted-foreground">{L("Engångsköp inkl. moms. Inget abonnemang.", "One-time purchase incl. VAT. No subscription.")}</p>
+              <p className="text-sm font-medium text-accent">{L("Ett enkelt pris", "One simple price")}</p>
+              <p className="mt-3 text-6xl font-semibold tracking-tight tabular-nums md:text-7xl">{yearlyPerMonth} kr<span className="text-2xl font-medium text-muted-foreground md:text-3xl">{L("/mån", "/mo")}</span></p>
+              <p className="mt-2 text-muted-foreground">{L(`Vid årsbetalning, ${kronor(PLANS.yearly.amount)} kr/år. Eller ${kronor(PLANS.monthly.amount)} kr/mån. Inkl. moms, avsluta när du vill.`, `Billed yearly at ${kronor(PLANS.yearly.amount)} kr. Or ${kronor(PLANS.monthly.amount)} kr monthly. Incl. VAT, cancel anytime.`)}</p>
               <Button asChild size="lg" variant="pop" className="mt-8 w-full sm:w-auto">
                 <Link to={ctaTo}>{signedIn ? t("landing.ctaIn") : L("Köp Barnmappen", "Buy Barnmappen")}<ArrowRight aria-hidden /></Link>
               </Button>

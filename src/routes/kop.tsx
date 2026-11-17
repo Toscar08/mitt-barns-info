@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAccountAccess } from "@/lib/access.functions";
 import { createStripeCheckout } from "@/lib/payments.functions";
 import { usePrefs } from "@/lib/prefs";
+import { kronor, PLANS, yearlyPerMonth, yearlySaving, type Plan } from "@/lib/pricing";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/kop")({
   head: () => ({
@@ -36,6 +38,7 @@ function BuyPage() {
   const [busy, setBusy] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeWithdrawal, setAgreeWithdrawal] = useState(false);
+  const [plan, setPlan] = useState<Plan>("yearly");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
@@ -49,7 +52,7 @@ function BuyPage() {
   async function buy() {
     setBusy(true);
     try {
-      const { url } = await checkout({ data: { origin: window.location.origin } });
+      const { url } = await checkout({ data: { origin: window.location.origin, plan } });
       window.location.href = url;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
@@ -67,8 +70,41 @@ function BuyPage() {
       <main className="rise mx-auto max-w-xl px-4 py-10 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">{sv ? "Skaffa din egen Barnmapp" : "Get your own Barnmappen"}</h1>
         <div className="surface mt-8 p-6 sm:p-8">
-          <p className="text-4xl font-semibold tracking-tight tabular-nums">
-            499 kr <span className="block pt-1 text-sm font-normal tracking-normal text-muted-foreground sm:inline sm:pt-0">{sv ? "engångsköp, inkl. 25 % moms" : "one-time purchase, incl. 25% VAT"}</span>
+          {/* Two plans side by side. The yearly one is chosen from the start: cheaper, and fewer card fees. */}
+          <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={sv ? "Välj betalning" : "Choose billing"}>
+            {(["monthly", "yearly"] as const).map((option) => {
+              const on = plan === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setPlan(option)}
+                  className={cn(
+                    "pressable relative cursor-pointer rounded-2xl border p-4 text-left transition-colors duration-200 ease-out",
+                    on ? "border-accent bg-accent/8 shadow-[0_0_0_1px_var(--accent)]" : "border-input bg-[var(--glass-field)] hover:border-accent/60",
+                  )}
+                >
+                  {option === "yearly" && (
+                    <span className="absolute -top-2.5 right-3 rounded-full bg-pop px-2 py-0.5 text-[11px] font-semibold text-pop-foreground">
+                      {sv ? `Spara ${yearlySaving} %` : `Save ${yearlySaving}%`}
+                    </span>
+                  )}
+                  <span className="block text-sm font-medium text-muted-foreground">{option === "yearly" ? (sv ? "Årsvis" : "Yearly") : sv ? "Månadsvis" : "Monthly"}</span>
+                  <span className="mt-1 block text-3xl font-semibold tracking-tight tabular-nums">
+                    {kronor(PLANS[option].amount)} kr
+                    <span className="text-sm font-normal text-muted-foreground">{option === "yearly" ? (sv ? "/år" : "/yr") : sv ? "/mån" : "/mo"}</span>
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {option === "yearly" ? (sv ? `Motsvarar ${yearlyPerMonth} kr/mån` : `Equals ${yearlyPerMonth} kr/mo`) : sv ? "Avsluta när du vill" : "Cancel anytime"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {sv ? "Priserna är inklusive 25 % moms. Prenumerationen förnyas automatiskt och kan avslutas när som helst under Inställningar." : "Prices include 25% VAT. The subscription renews automatically and can be cancelled anytime in Settings."}
           </p>
           <ul className="mt-6 space-y-3">
             {features.map((f) => (
@@ -120,13 +156,15 @@ function BuyPage() {
                 <Checkbox checked={agreeWithdrawal} onCheckedChange={(v) => setAgreeWithdrawal(v === true)} className="mt-0.5" />
                 <span>
                   {sv
-                    ? "Jag samtycker till att tjänsten aktiveras direkt och bekräftar att min 14 dagars ångerrätt därmed upphör."
-                    : "I agree that the service starts immediately and acknowledge that my 14-day right of withdrawal is thereby lost."}
+                    ? "Jag vill att prenumerationen börjar direkt. Ångrar jag mig inom 14 dagar betalar jag bara för den tid jag hunnit använda."
+                    : "I want the subscription to start right away. If I withdraw within 14 days, I only pay for the time I have used."}
                 </span>
               </label>
             </div>
             <Button size="lg" variant="pop" className="mt-6 w-full" onClick={buy} disabled={busy || !agreeTerms || !agreeWithdrawal}>
-              {sv ? "Betala 499 kr med Stripe" : "Pay 499 kr with Stripe"}
+              {sv
+                ? `Prenumerera för ${kronor(PLANS[plan].amount)} kr/${plan === "yearly" ? "år" : "mån"}`
+                : `Subscribe for ${kronor(PLANS[plan].amount)} kr/${plan === "yearly" ? "yr" : "mo"}`}
             </Button>
             </>
           )}
