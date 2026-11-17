@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/AppHeader";
+import { Loader } from "@/components/Brand";
 import { AccountAccess, useAccountAccess } from "@/components/AccountAccess";
 import { useWorkspace } from "@/components/PrivateGate";
 import { Button } from "@/components/ui/button";
@@ -82,8 +83,8 @@ function ActivatePage() {
     return () => clearTimeout(timer);
   }, [slug, check]);
 
-  if (access.isPending) return null;
-  if (access.error || !access.data || !["trial", "paid", "complimentary"].includes(access.data.status)) return <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl px-6 py-10"><AccountAccess /></main></div>;
+  if (access.isPending) return <Loader />;
+  if (access.error || !access.data || !["trial", "paid", "complimentary"].includes(access.data.status)) return <div className="min-h-dvh"><AppHeader /><main className="rise mx-auto max-w-2xl px-4 py-8 sm:px-6"><AccountAccess /></main></div>;
   if (workspace.data) return <Navigate to="/f/$slug" params={{ slug: workspace.data.slug }} replace />;
 
   async function submit(event: React.FormEvent) {
@@ -97,7 +98,7 @@ function ActivatePage() {
       }
       await queryClient.invalidateQueries({ queryKey: ["workspace"] });
       toast.success(sv ? "Din sida är aktiverad!" : "Your site is activated!");
-      navigate({ to: "/installningar" });
+      navigate({ to: "/snabbstart" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
@@ -108,11 +109,14 @@ function ActivatePage() {
   const normalized = normalizeSlug(slug);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh">
       <AppHeader />
-      <main className="mx-auto max-w-lg px-6 py-12">
-        <KeyRound className="size-8 text-accent" aria-hidden />
-        <h1 className="mt-4 font-display text-3xl">{sv ? "Aktivera din privata sida" : "Activate your private site"}</h1>
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6">
+        <div className="surface rise p-6 sm:p-8">
+        <span className="grid size-12 place-content-center rounded-full bg-accent/15 text-accent">
+          <KeyRound className="size-6" aria-hidden />
+        </span>
+        <h1 className="mt-4 text-3xl">{sv ? "Aktivera din privata sida" : "Activate your private site"}</h1>
         <p className="mt-2 text-muted-foreground">
           {sv
             ? "Välj ett namn på din privata sida. Din åtkomst kontrolleras automatiskt."
@@ -139,16 +143,17 @@ function ActivatePage() {
             <Label htmlFor="dn">{sv ? "Namn på sidan (valfritt)" : "Site name (optional)"}</Label>
             <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={sv ? "Familjen Andersson" : "The Andersons"} />
           </div>
-          <Button type="submit" className="w-full" disabled={busy || slugState !== "ok"}>
+          <Button type="submit" size="lg" className="w-full" disabled={busy || slugState !== "ok"}>
             {sv ? "Aktivera" : "Activate"}
           </Button>
         </form>
         <p className="mt-6 text-sm text-muted-foreground">
-          {sv ? "Har du ingen kod?" : "No code?"}{" "}
-          <Link to="/kop" className="text-accent underline-offset-4 hover:underline">
+          {sv ? "Har du inte köpt än?" : "Haven't bought yet?"}{" "}
+          <Link to="/kop" className="link-line text-accent">
             {sv ? "Köp åtkomst" : "Buy access"}
           </Link>
         </p>
+        </div>
       </main>
     </div>
   );

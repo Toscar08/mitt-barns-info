@@ -2,14 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Upload, ChevronRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, Plus, Upload, ChevronRight, ShieldCheck, Search, FolderHeart } from "lucide-react";
 
 import { PrivateGate } from "@/components/PrivateGate";
 import { AppHeader } from "@/components/AppHeader";
+import { QuickAdd } from "@/components/QuickAdd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { useChildren } from "@/lib/children";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/barn/")({
@@ -45,29 +47,35 @@ function ChildrenPage() {
   const search = useQuery({
     queryKey: ["search", term],
     enabled: term.trim().length >= 2,
+    // Searches notes, tasks and the personal details, so "nötter" or "Solskolan" is found wherever it is.
     queryFn: async () => {
       const q = `%${term.trim().replace(/[%_,()]/g, " ")}%`;
-      const { data, error } = await supabase
-        .from("entries")
-        .select("id, title, content, child_id, children(name)")
-        .or(`title.ilike.${q},content.ilike.${q}`)
-        .limit(20);
+      const fields = ["allergies", "medications", "school", "school_class", "clothing_size", "shoe_size", "blood_type", "notes"] as const;
+      const [entries, tasks, kids] = await Promise.all([
+        supabase.from("entries").select("id, title, content, child_id, children(name)").or(`title.ilike.${q},content.ilike.${q}`).limit(20),
+        supabase.from("tasks").select("id, title, due_at, child_id, children(name)").ilike("title", q).limit(10),
+        supabase.from("children").select("*").or(fields.map((f) => `${f}.ilike.${q}`).join(",")).limit(10),
+      ]);
+      const error = entries.error ?? tasks.error ?? kids.error;
       if (error) throw error;
-      return data;
+      const needle = term.trim().toLowerCase();
+      const label = (field: (typeof fields)[number]) =>
+        (({ allergies: "person.allergies", medications: "person.medications", school: "person.school", school_class: "person.class", clothing_size: "person.clothing", shoe_size: "person.shoe", blood_type: "person.blood", notes: "person.summary" }) as const)[field];
+      type Hit = { id: string; childId: string; title: string; detail: string };
+      const name = (row: { children: unknown }) => (row.children as { name: string } | null)?.name ?? "";
+      return [
+        ...(kids.data ?? []).flatMap((kid) =>
+          fields
+            .filter((f) => (kid[f] ?? "").toLowerCase().includes(needle))
+            .map((f): Hit => ({ id: `${kid.id}-${f}`, childId: kid.id, title: `${t(label(f))}: ${kid[f]}`, detail: kid.name })),
+        ),
+        ...(entries.data ?? []).map((e): Hit => ({ id: e.id, childId: e.child_id, title: e.title, detail: [name(e), e.content].filter(Boolean).join(" · ") })),
+        ...(tasks.data ?? []).map((task): Hit => ({ id: task.id, childId: task.child_id, title: task.title, detail: [name(task), t("tasks.task")].join(" · ") })),
+      ];
     },
   });
 
-  const children = useQuery({
-    queryKey: ["children"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("children")
-        .select("*")
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const children = useChildren();
 
   const addChild = useMutation({
     mutationFn: async () => {
@@ -115,6 +123,12 @@ function ChildrenPage() {
           medications: (c["medications"] as string) ?? null,
           care_contacts: (c["care_contacts"] as string) ?? null,
           notes: (c["notes"] as string) ?? null,
+          clothing_size: (c["clothing_size"] as string) ?? null,
+          shoe_size: (c["shoe_size"] as string) ?? null,
+          passport_number: (c["passport_number"] as string) ?? null,
+          passport_expiry: (c["passport_expiry"] as string) ?? null,
+          school: (c["school"] as string) ?? null,
+          school_class: (c["school_class"] as string) ?? null,
         })
         .select()
         .single();
@@ -150,15 +164,15 @@ function ChildrenPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <AppHeader />
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="rise flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl">{t("children.title")}</h1>
+            <h1 className="text-4xl sm:text-5xl">{t("children.title")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{t("children.lead")}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => fileRef.current?.click()}>
               <Upload className="size-4" aria-hidden />
               {t("children.restore")}
@@ -181,26 +195,33 @@ function ChildrenPage() {
           </div>
         </div>
 
-        <div className="mt-6">
-          <Input
-            type="search"
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder={lang === "sv" ? "Sök i alla mappar…" : "Search all folders…"}
-            aria-label={lang === "sv" ? "Sök" : "Search"}
-          />
+        {!!children.data?.length && <QuickAdd kids={children.data} />}
+
+        <div className="rise mt-6 [--i:2]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              type="search"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder={lang === "sv" ? "Sök i alla mappar…" : "Search all folders…"}
+              aria-label={lang === "sv" ? "Sök" : "Search"}
+              className="h-12 rounded-full pl-11"
+            />
+          </div>
           {term.trim().length >= 2 && (
-            <ul className="surface mt-2 divide-y divide-border">
+            <ul className="surface pop mt-2 divide-y divide-border overflow-hidden">
+              {search.isLoading && (
+                <li className="animate-pulse p-4 text-sm text-muted-foreground">{lang === "sv" ? "Söker…" : "Searching…"}</li>
+              )}
               {search.data?.length === 0 && (
                 <li className="p-4 text-sm text-muted-foreground">{lang === "sv" ? "Inga träffar." : "No results."}</li>
               )}
               {search.data?.map((hit) => (
                 <li key={hit.id}>
-                  <Link to="/barn/$childId" params={{ childId: hit.child_id }} className="block p-4 hover:bg-secondary/60">
-                    <span className="block font-medium">{hit.title}</span>
-                    <span className="block truncate text-sm text-muted-foreground">
-                      {(hit.children as { name: string } | null)?.name} · {hit.content}
-                    </span>
+                  <Link to="/barn/$childId" params={{ childId: hit.childId }} className="row block px-5 py-4">
+                    <span className="block font-medium [overflow-wrap:anywhere]">{hit.title}</span>
+                    <span className="block truncate text-sm text-muted-foreground">{hit.detail}</span>
                   </Link>
                 </li>
               ))}
@@ -210,7 +231,7 @@ function ChildrenPage() {
 
         {adding && (
           <form
-            className="surface mt-6 grid gap-4 p-6 sm:grid-cols-[1fr_auto_auto] sm:items-end"
+            className="surface pop mt-6 grid gap-4 p-6 sm:grid-cols-[1fr_auto_auto] sm:items-end"
             onSubmit={(event) => {
               event.preventDefault();
               addChild.mutate();
@@ -220,6 +241,7 @@ function ChildrenPage() {
               <Label htmlFor="child-name">{t("children.name")}</Label>
               <Input
                 id="child-name"
+                autoFocus
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -241,34 +263,72 @@ function ChildrenPage() {
           </form>
         )}
 
-        <section className="mt-8 space-y-3">
+        <section className="mt-8 grid gap-3 sm:grid-cols-2">
           {children.isLoading && (
-            <p className="text-sm text-muted-foreground">{t("children.loading")}</p>
+            <>
+              <span className="sr-only" role="status">{t("children.loading")}</span>
+              <div className="surface h-[5.5rem] animate-pulse" />
+              <div className="surface h-[5.5rem] animate-pulse" />
+            </>
+          )}
+          {children.error && (
+            <p className="surface p-6 text-sm text-destructive sm:col-span-2" role="alert">{t("common.error")}</p>
           )}
           {children.data?.length === 0 && !adding && (
-            <div className="surface p-10 text-center">
-              <h2 className="text-2xl">{t("children.emptyTitle")}</h2>
+            <div className="surface rise p-10 text-center sm:col-span-2">
+              <span className="mx-auto grid size-14 place-content-center rounded-full bg-accent/15 text-accent">
+                <FolderHeart className="size-7" aria-hidden />
+              </span>
+              <h2 className="mt-4 text-2xl">{t("children.emptyTitle")}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{t("children.emptyText")}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                <Button asChild variant="pop">
+                  <Link to="/snabbstart">
+                    {lang === "sv" ? "Kom igång på en minut" : "Get started in a minute"}
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={() => setAdding(true)}>
+                  <Plus aria-hidden />
+                  {t("children.new")}
+                </Button>
+              </div>
             </div>
           )}
-          {children.data?.filter((c) => !term.trim() || c.name.toLowerCase().includes(term.trim().toLowerCase())).map((child) => (
+          {children.data?.filter((c) => !term.trim() || c.name.toLowerCase().includes(term.trim().toLowerCase())).map((child, i) => (
             <Link
               key={child.id}
               to="/barn/$childId"
               params={{ childId: child.id }}
-              className="surface flex items-center justify-between p-5 transition-colors hover:bg-secondary/60"
+              style={{ "--i": Math.min(i, 8) + 2 } as React.CSSProperties}
+              className="group surface rise liftable flex items-center gap-4 p-5"
             >
-              <span>
-                <span className="block text-xl">{child.name}</span>
+              <span className="grid size-12 shrink-0 place-content-center rounded-full bg-accent/15 text-lg font-semibold text-accent transition-[background-color,color,transform] duration-200 ease-out group-hover:scale-105 group-hover:bg-accent group-hover:text-accent-foreground" aria-hidden>
+                {child.name.trim().charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xl font-semibold tracking-tight">{child.name}</span>
                 <span className="block text-sm text-muted-foreground">
                   {child.birth_date
                     ? `${t("children.born")} ${new Date(child.birth_date).toLocaleDateString(locale)}`
                     : t("children.noBirth")}
                 </span>
               </span>
-              <ChevronRight className="size-5 text-muted-foreground" aria-hidden />
+              <ChevronRight className="size-5 shrink-0 text-muted-foreground transition-[transform,color] duration-200 ease-out group-hover:translate-x-1 group-hover:text-accent" aria-hidden />
             </Link>
           ))}
+          {!!children.data?.length && !term.trim() && !adding && (
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              className="group dropzone flex min-h-[5.5rem] cursor-pointer items-center justify-center gap-3 p-5 font-medium text-muted-foreground hover:text-accent"
+            >
+              <span className="grid size-10 place-content-center rounded-full bg-accent/12 text-accent transition-[background-color,color,transform] duration-200 ease-out group-hover:rotate-90 group-hover:bg-accent group-hover:text-accent-foreground">
+                <Plus className="size-5" aria-hidden />
+              </span>
+              {t("children.new")}
+            </button>
+          )}
         </section>
 
         <p className="mt-10 flex items-center gap-2 text-xs text-muted-foreground">

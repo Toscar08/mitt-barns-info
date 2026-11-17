@@ -110,36 +110,9 @@ export const unlockWithPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ pin: z.string().min(4).max(8) }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: row, error } = await context.supabase
-      .from("workspaces")
-      .select("pin_hash, pin_failed_attempts, pin_locked_until")
-      .eq("owner_id", context.userId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!row?.pin_hash) return { ok: true as const };
-    if (row.pin_locked_until && new Date(row.pin_locked_until) > new Date()) {
-      return { ok: false as const, locked: true as const };
-    }
-    const { verifyPin } = await import("@/lib/pin.server");
-    const ok = await verifyPin(data.pin, row.pin_hash);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    if (ok) {
-      await supabaseAdmin
-        .from("workspaces")
-        .update({ pin_failed_attempts: 0, pin_locked_until: null })
-        .eq("owner_id", context.userId);
-      return { ok: true as const };
-    }
-    const attempts = row.pin_failed_attempts + 1;
-    const lock = attempts >= 5;
-    await supabaseAdmin
-      .from("workspaces")
-      .update({
-        pin_failed_attempts: lock ? 0 : attempts,
-        pin_locked_until: lock ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : null,
-      })
-      .eq("owner_id", context.userId);
-    return { ok: false as const, locked: lock };
+    const { attemptPin } = await import("@/lib/pin-attempt.server");
+    const result = await attemptPin(context.userId, data.pin);
+    return result.ok ? { ok: true as const } : { ok: false as const, locked: result.locked };
   });
 
 export const myActivationCode = createServerFn({ method: "GET" })

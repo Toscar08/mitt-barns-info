@@ -5,8 +5,8 @@
   "start_url": "/fraga",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F6F8F9",
-  "theme_color": "#123B4A",
+  "background_color": "#EDF1F8",
+  "theme_color": "#E3EBF7",
   "icons": [
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]

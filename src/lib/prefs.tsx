@@ -10,6 +10,7 @@ const dict = {
   sv: {
     "app.name": "Barnmappen",
     "nav.myChildren": "Mina barn",
+    "nav.ask": "Fråga",
     "nav.signIn": "Logga in",
     "nav.signOut": "Logga ut",
     "theme.light": "Ljust tema",
@@ -30,7 +31,7 @@ const dict = {
     "landing.f1.title": "Personuppgifter",
     "landing.f1.text": "Namn, födelsedatum, allergier, mediciner och blodgrupp.",
     "landing.f2.title": "Kontaktuppgifter",
-    "landing.f2.text": "Vårdcontakter, skola, tränare och andra viktiga nummer.",
+    "landing.f2.text": "Vårdkontakter, skola, tränare och andra viktiga nummer.",
     "landing.f3.title": "Kalender & dokument",
     "landing.f3.text": "Aktiviteter, uppgifter och viktiga filer i barnets privata mapp.",
     "landing.f4.title": "AI-assistent",
@@ -85,6 +86,21 @@ const dict = {
     "folder.backup": "Säkerhetskopiera",
     "folder.delete": "Ta bort mapp",
     "folder.deleteConfirm": "Ta bort hela mappen och all information om barnet?",
+    "folder.deleteHelp": "Dokument, uppgifter och anteckningar försvinner. Det går inte att ångra.",
+    "common.cancel": "Avbryt",
+    "docs.deleteConfirm": "Ta bort dokumentet?",
+    "docs.deleteHelp": "Filen raderas från barnets mapp. Det går inte att ångra.",
+    "common.error": "Något gick fel. Försök igen.",
+    "nav.home": "Hem",
+    "entry.edit": "Redigera",
+    "tasks.removed": "Uppgiften är borttagen",
+    "common.undo": "Ångra",
+    "docs.download": "Ladda ner",
+    "nav.settings": "Inställningar",
+    "entry.deleteHelp": "Informationen försvinner från barnets mapp. Det går inte att ångra.",
+    "docs.drop": "Välj en fil eller släpp den här",
+    "docs.uploading": "Laddar upp…",
+    "tasks.overdue": "Försenad",
     "folder.backupDone": "Säkerhetskopian är nedladdad",
     "folder.loading": "Hämtar…",
     "folder.missing": "Mappen finns inte",
@@ -156,6 +172,7 @@ const dict = {
   en: {
     "app.name": "Barnmappen",
     "nav.myChildren": "My children",
+    "nav.ask": "Ask",
     "nav.signIn": "Sign in",
     "nav.signOut": "Sign out",
     "theme.light": "Light theme",
@@ -230,6 +247,21 @@ const dict = {
     "folder.backup": "Back up",
     "folder.delete": "Delete folder",
     "folder.deleteConfirm": "Delete the whole folder and all information about the child?",
+    "folder.deleteHelp": "Documents, tasks and notes are removed. This cannot be undone.",
+    "common.cancel": "Cancel",
+    "docs.deleteConfirm": "Delete the document?",
+    "docs.deleteHelp": "The file is removed from the child's folder. This cannot be undone.",
+    "common.error": "Something went wrong. Try again.",
+    "nav.home": "Home",
+    "entry.edit": "Edit",
+    "tasks.removed": "Task removed",
+    "common.undo": "Undo",
+    "docs.download": "Download",
+    "nav.settings": "Settings",
+    "entry.deleteHelp": "The information is removed from the child's folder. This cannot be undone.",
+    "docs.drop": "Choose a file or drop it here",
+    "docs.uploading": "Uploading…",
+    "tasks.overdue": "Overdue",
     "folder.backupDone": "Backup downloaded",
     "folder.loading": "Loading…",
     "folder.missing": "Folder not found",
@@ -331,6 +363,10 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
+    // Keeps the installed app's title bar in step with the wallpaper.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#111A30" : "#E3EBF7");
   }, [theme]);
 
   const setLang = useCallback((next: Lang) => {

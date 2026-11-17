@@ -44,14 +44,16 @@ export const askAssistant = createServerFn({ method: "POST" })
       "[PERSONAL DETAILS]",
       `Name: ${c.name}`,
       c.birth_date ? `Date of birth: ${c.birth_date}` : null,
-      c.personal_number ? `Personal ID number: ${c.personal_number}` : null,
+      // Identity numbers never leave for the AI provider. The assistant only learns that one exists,
+      // so it can point the parent to the folder instead of saying nothing is stored.
+      c.personal_number ? "Personal ID number: stored in the folder (not shown here)" : null,
       c.blood_type ? `Blood type: ${c.blood_type}` : null,
       c.allergies ? `Allergies: ${c.allergies}` : null,
       c.medications ? `Medication: ${c.medications}` : null,
       c.care_contacts ? `Care contacts: ${c.care_contacts}` : null,
       c.clothing_size ? `Clothing size: ${c.clothing_size}` : null,
       c.shoe_size ? `Shoe size: ${c.shoe_size}` : null,
-      c.passport_number ? `Passport number: ${c.passport_number}` : null,
+      c.passport_number ? "Passport number: stored in the folder (not shown here)" : null,
       c.passport_expiry ? `Passport valid until: ${c.passport_expiry}` : null,
       c.school ? `School / preschool: ${c.school}` : null,
       c.school_class ? `Class / group: ${c.school_class}` : null,
@@ -116,6 +118,9 @@ export const askAssistant = createServerFn({ method: "POST" })
           "- You may combine facts from several parts of the folder, but keep the answer short.",
           "- Understand natural language: match the meaning even if the wording differs from the folder.",
           `- If the answer is not in the folder, reply exactly: "${NOT_FOUND[lang]}" and nothing else.`,
+          lang === "sv"
+            ? "- If asked for a personal ID or passport number that is marked as stored, say it is kept in the child's folder under Personuppgifter. Never invent one."
+            : "- If asked for a personal ID or passport number that is marked as stored, say it is kept in the child's folder under Personal details. Never invent one.",
           lang === "sv"
             ? "- Always answer in Swedish."
             : "- Always answer in English.",

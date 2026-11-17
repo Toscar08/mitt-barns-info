@@ -3,20 +3,25 @@ import { CalendarLink } from "@/components/CalendarLink";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Check,
+  CloudUpload,
   Download,
   FileText,
+  LoaderCircle,
+  Pencil,
   Plus,
-  Send,
   Sparkles,
   Trash2,
-  Upload,
 } from "lucide-react";
 
 import { AppHeader } from "@/components/AppHeader";
+import { AskBar } from "@/components/AskBar";
+import { Loader } from "@/components/Brand";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -26,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { askAssistant } from "@/lib/assistant.functions";
 import { usePrefs, type TranslationKey } from "@/lib/prefs";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/barn/$childId")({
   head: () => ({
@@ -51,11 +57,23 @@ export const Route = createFileRoute("/_authenticated/barn/$childId")({
 
 const BUCKET = "child-documents";
 
+// Delete buttons stay quiet until pointed at, then turn red.
+const trashButton = "shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive";
+
+const dateTime = (value: string, locale: string) =>
+  new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+
+function fileSize(bytes: number, locale: string) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} kB`;
+  return `${(bytes / (1024 * 1024)).toLocaleString(locale, { maximumFractionDigits: 1 })} MB`;
+}
+
 function ChildFolder() {
   const { childId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, locale } = usePrefs();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const child = useQuery({
     queryKey: ["child", childId],
@@ -110,6 +128,12 @@ function ChildFolder() {
     },
   });
 
+  // The browser tab and the installed app's window carry the child's name.
+  const childName = child.data?.name;
+  useEffect(() => {
+    if (childName) document.title = `${childName} – Barnmappen`;
+  }, [childName]);
+
   async function exportFolder() {
     const access = await supabase.rpc("has_account_access");
     if (access.error || access.data !== true) { toast.error("Åtkomst pausad / Access paused"); return; }
@@ -131,7 +155,6 @@ function ChildFolder() {
   }
 
   async function deleteChild() {
-    if (!window.confirm(t("folder.deleteConfirm"))) return;
     const { error } = await supabase.from("children").delete().eq("id", childId);
     if (error) {
       toast.error(error.message);
@@ -143,21 +166,19 @@ function ChildFolder() {
 
   if (child.isLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-dvh">
         <AppHeader />
-        <p className="mx-auto max-w-5xl px-6 py-10 text-sm text-muted-foreground">
-          {t("folder.loading")}
-        </p>
+        <Loader label={t("folder.loading")} />
       </div>
     );
   }
 
   if (!child.data) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-dvh">
         <AppHeader />
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <h1 className="text-3xl">{t("folder.missing")}</h1>
+        <div className="surface rise mx-auto mt-10 max-w-sm p-8 text-center">
+          <h1 className="text-2xl">{t("folder.missing")}</h1>
           <Button asChild className="mt-4">
             <Link to="/barn">{t("folder.toChildren")}</Link>
           </Button>
@@ -167,42 +188,56 @@ function ChildFolder() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <AppHeader />
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
         <Link
           to="/barn"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="group pressable -ml-3 inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-muted-foreground hover:bg-foreground/6 hover:text-foreground"
         >
-          <ArrowLeft className="size-4" aria-hidden />
+          <ArrowLeft className="size-4 transition-transform duration-200 ease-out group-hover:-translate-x-0.5" aria-hidden />
           {t("nav.myChildren")}
         </Link>
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-4xl">{child.data.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {child.data.birth_date
-                ? `${t("children.born")} ${new Date(child.data.birth_date).toLocaleDateString(locale)}`
-                : t("children.noBirth")}
-            </p>
+        <div className="rise mt-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="grid size-14 shrink-0 place-content-center rounded-full bg-accent/15 text-2xl font-semibold text-accent" aria-hidden>
+              {child.data.name.trim().charAt(0).toUpperCase()}
+            </span>
+            <div className="min-w-0">
+              <h1 className="truncate text-4xl sm:text-5xl">{child.data.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {child.data.birth_date
+                  ? `${t("children.born")} ${new Date(child.data.birth_date).toLocaleDateString(locale)}`
+                  : t("children.noBirth")}
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportFolder}>
-              <Download className="size-4" aria-hidden />
+              <Download aria-hidden />
               {t("folder.backup")}
             </Button>
-            <Button variant="ghost" onClick={deleteChild}>
-              <Trash2 className="size-4" aria-hidden />
+            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
+              <Trash2 aria-hidden />
               {t("folder.delete")}
             </Button>
           </div>
         </div>
+        <ConfirmDialog
+          open={confirmDelete}
+          onOpenChange={setConfirmDelete}
+          title={t("folder.deleteConfirm")}
+          description={t("folder.deleteHelp")}
+          confirmLabel={t("folder.delete")}
+          cancelLabel={t("common.cancel")}
+          onConfirm={deleteChild}
+        />
 
         <Assistant childId={childId} childName={child.data.name} />
 
         <Tabs defaultValue="person" className="mt-8">
-          <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:w-auto">
+          <TabsList>
             <TabsTrigger value="person">{t("tab.person")}</TabsTrigger>
             <TabsTrigger value="contacts">{t("tab.contacts")}</TabsTrigger>
             <TabsTrigger value="calendar">{t("tab.calendar")}</TabsTrigger>
@@ -231,7 +266,7 @@ function ChildFolder() {
               titlePlaceholder="calendar.titlePlaceholder"
               contentPlaceholder="calendar.contentPlaceholder"
             />
-            <h2 className="mt-8 text-2xl">{t("tasks.heading")}</h2>
+            <h2 className="mt-10 text-2xl">{t("tasks.heading")}</h2>
             <TaskList childId={childId} tasks={tasks.data ?? []} />
           </TabsContent>
           <TabsContent value="documents">
@@ -279,8 +314,7 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
   const [answer, setAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
+  async function submit() {
     if (question.trim().length < 2) return;
     setLoading(true);
     setAnswer(null);
@@ -295,30 +329,29 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
   }
 
   return (
-    <section className="surface mt-8 p-6">
-      <h2 className="flex items-center gap-2 text-2xl">
-        <Sparkles className="size-5 text-accent" aria-hidden />
+    <section className="surface rise mt-8 p-6 [--i:1]">
+      <h2 className="flex items-center gap-3 text-2xl">
+        <span className="grid size-9 shrink-0 place-content-center rounded-full bg-accent/15 text-accent">
+          <Sparkles className="size-4.5" aria-hidden />
+        </span>
         {t("ai.heading")} {childName}
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">{t("ai.lead")}</p>
-      <form onSubmit={submit} className="mt-4 flex flex-wrap gap-2">
-        <Input
+      <p className="mt-2 text-sm text-muted-foreground">{t("ai.lead")}</p>
+      <div className="mt-4">
+        <AskBar
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={setQuestion}
+          onSubmit={() => void submit()}
           placeholder={t("ai.placeholder")}
-          className="min-w-56 flex-1"
+          label={t("ai.ask")}
+          loading={loading}
         />
-        <Button type="submit" disabled={loading}>
-          <Send className="size-4" aria-hidden />
-          {loading ? t("ai.thinking") : t("ai.ask")}
-        </Button>
-      </form>
-      <p className="mt-3 text-xs text-muted-foreground">{t("ai.disclaimer")}</p>
-      {answer && (
-        <p className="mt-4 rounded-xl bg-secondary p-4 text-sm whitespace-pre-wrap text-secondary-foreground">
-          {answer}
-        </p>
-      )}
+      </div>
+      <div aria-live="polite">
+        {loading && <p className="mt-4 animate-pulse text-sm text-muted-foreground">{t("ai.thinking")}</p>}
+        {answer && <p className="well pop mt-4 p-4 text-[15px] whitespace-pre-wrap">{answer}</p>}
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">{t("ai.disclaimer")}</p>
     </section>
   );
 }
@@ -389,7 +422,7 @@ function InfoForm({ child }: { child: Child }) {
 
   return (
     <form
-      className="surface mt-4 space-y-5 p-6"
+      className="surface mt-4 space-y-5 p-6 sm:p-8"
       onSubmit={(event) => {
         event.preventDefault();
         save.mutate();
@@ -403,7 +436,7 @@ function InfoForm({ child }: { child: Child }) {
       </div>
       {area("allergies", "person.allergies", "person.allergiesPlaceholder")}
       {area("medications", "person.medications", "person.medicationsPlaceholder")}
-      <h3 className="pt-2 text-xl">{t("person.practical")}</h3>
+      <h3 className="border-t border-border pt-6 text-xl">{t("person.practical")}</h3>
       <div className="grid gap-5 sm:grid-cols-2">
         {field("clothing_size", "person.clothing")}
         {field("shoe_size", "person.shoe")}
@@ -445,6 +478,9 @@ function Entries({
   const { t } = usePrefs();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  // The entry stays set while the dialog closes, so its title doesn't blank out mid-animation.
+  const [target, setTarget] = useState<Entry | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const add = useMutation({
     mutationFn: async () => {
@@ -473,6 +509,24 @@ function Entries({
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["entries", childId] }),
+    onError: () => toast.error(t("common.error")),
+  });
+
+  const [editing, setEditing] = useState<{ id: string; title: string; content: string } | null>(null);
+  const update = useMutation({
+    mutationFn: async (draft: { id: string; title: string; content: string }) => {
+      const { error } = await supabase
+        .from("entries")
+        .update({ title: draft.title.trim(), content: draft.content.trim() || null })
+        .eq("id", draft.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setEditing(null);
+      void queryClient.invalidateQueries({ queryKey: ["entries", childId] });
+      toast.success(t("entry.saved"));
+    },
+    onError: () => toast.error(t("common.error")),
   });
 
   return (
@@ -510,13 +564,51 @@ function Entries({
         </Button>
       </form>
 
-      {entries.length === 0 && <p className="text-sm text-muted-foreground">{t("entry.empty")}</p>}
-      {entries.map((entry) => (
-        <article key={entry.id} className="surface flex items-start justify-between gap-4 p-5">
-          <div>
-            <h3 className="text-xl">{entry.title}</h3>
+      {entries.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("entry.empty")}</p>}
+      {entries.length > 0 && (
+      <div className="surface divide-y divide-border overflow-hidden">
+      {entries.map((entry) =>
+        editing?.id === entry.id ? (
+          <form
+            key={entry.id}
+            className="space-y-3 bg-[var(--glass-field)] px-5 py-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (editing.title.trim()) update.mutate(editing);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setEditing(null);
+            }}
+          >
+            <Input
+              autoFocus
+              required
+              value={editing.title}
+              onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+              aria-label={t("entry.title")}
+            />
+            <Textarea
+              rows={3}
+              value={editing.content}
+              onChange={(e) => setEditing({ ...editing, content: e.target.value })}
+              aria-label={t("entry.content")}
+            />
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" disabled={update.isPending}>
+                <Check aria-hidden />
+                {t("folder.save")}
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </form>
+        ) : (
+        <article key={entry.id} className="group/entry row flex items-start gap-2 px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg [overflow-wrap:anywhere]">{entry.title}</h3>
             {entry.content && (
-              <p className="mt-1 text-sm whitespace-pre-wrap text-muted-foreground">
+              <p className="mt-1 text-sm whitespace-pre-wrap text-muted-foreground [overflow-wrap:anywhere]">
                 {entry.content}
               </p>
             )}
@@ -524,13 +616,41 @@ function Entries({
           <Button
             variant="ghost"
             size="icon"
+            className="shrink-0 text-muted-foreground hover:text-accent"
+            aria-label={`${t("entry.edit")}: ${entry.title}`}
+            title={t("entry.edit")}
+            onClick={() => setEditing({ id: entry.id, title: entry.title, content: entry.content ?? "" })}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={trashButton}
             aria-label={t("entry.remove")}
-            onClick={() => remove.mutate(entry.id)}
+            onClick={() => {
+              setTarget(entry);
+              setConfirming(true);
+            }}
           >
             <Trash2 className="size-4" aria-hidden />
           </Button>
         </article>
-      ))}
+        ),
+      )}
+      </div>
+      )}
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`${t("entry.remove")} ”${target?.title ?? ""}”?`}
+        description={t("entry.deleteHelp")}
+        confirmLabel={t("entry.remove")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (target) remove.mutate(target.id);
+        }}
+      />
     </div>
   );
 }
@@ -573,14 +693,38 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
       if (error) throw error;
     },
     onSuccess: invalidate,
+    onError: () => toast.error(t("common.error")),
   });
 
+  // A task goes at once, with a few seconds to take it back, instead of a dialog for every small item.
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tasks").delete().eq("id", id);
+    mutationFn: async (task: Task) => {
+      const { error } = await supabase.from("tasks").delete().eq("id", task.id);
       if (error) throw error;
+      return task;
     },
-    onSuccess: invalidate,
+    onSuccess: (task) => {
+      invalidate();
+      toast(t("tasks.removed"), {
+        description: task.title,
+        action: {
+          label: t("common.undo"),
+          onClick: async () => {
+            const { data: userData } = await supabase.auth.getUser();
+            const { error } = await supabase.from("tasks").insert({
+              user_id: userData.user!.id,
+              child_id: childId,
+              title: task.title,
+              due_at: task.due_at,
+              done: task.done,
+            });
+            if (error) toast.error(t("common.error"));
+            invalidate();
+          },
+        },
+      });
+    },
+    onError: () => toast.error(t("common.error")),
   });
 
   return (
@@ -612,37 +756,43 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
           />
         </div>
         <Button type="submit" disabled={add.isPending}>
+          <Plus className="size-4" aria-hidden />
           {t("entry.add")}
         </Button>
       </form>
 
-      {tasks.length === 0 && <p className="text-sm text-muted-foreground">{t("tasks.empty")}</p>}
-      <ul className="space-y-2">
-        {tasks.map((task) => (
-          <li key={task.id} className="surface flex items-center gap-3 p-4">
-            <Checkbox
-              checked={task.done}
-              onCheckedChange={() => toggle.mutate(task)}
-              aria-label={t("tasks.markDone")}
-            />
-            <span className="flex-1">
-              <span className={task.done ? "line-through opacity-60" : ""}>{task.title}</span>
-              {task.due_at && (
-                <span className="block text-xs text-muted-foreground">
-                  {t("tasks.dueShort")} {new Date(task.due_at).toLocaleString(locale)}
-                </span>
-              )}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("entry.remove")}
-              onClick={() => remove.mutate(task.id)}
-            >
-              <Trash2 className="size-4" aria-hidden />
-            </Button>
-          </li>
-        ))}
+      {tasks.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("tasks.empty")}</p>}
+      <ul className={tasks.length ? "surface divide-y divide-border overflow-hidden" : "hidden"}>
+        {tasks.map((task) => {
+          const overdue = !task.done && !!task.due_at && new Date(task.due_at).getTime() < Date.now();
+          return (
+            <li key={task.id} className="row flex items-center gap-3 px-5 py-3.5">
+              <Checkbox
+                checked={task.done}
+                onCheckedChange={() => toggle.mutate(task)}
+                aria-label={t("tasks.markDone")}
+              />
+              <span className="min-w-0 flex-1">
+                <span className={`transition-opacity duration-200 ${task.done ? "line-through opacity-50" : ""}`}>{task.title}</span>
+                {task.due_at && (
+                  <span className={cn("block text-xs tabular-nums", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
+                    {overdue ? `${t("tasks.overdue")} · ` : `${t("tasks.dueShort")} `}
+                    {dateTime(task.due_at, locale)}
+                  </span>
+                )}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={trashButton}
+                aria-label={t("entry.remove")}
+                onClick={() => remove.mutate(task)}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </Button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -653,6 +803,7 @@ type Document = {
   name: string;
   storage_path: string;
   size_bytes: number | null;
+  mime_type: string | null;
   created_at: string;
 };
 
@@ -660,6 +811,10 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
   const queryClient = useQueryClient();
   const { t, locale } = usePrefs();
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  // The document stays set while the dialog closes, so its name doesn't blank out mid-animation.
+  const [target, setTarget] = useState<Document | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["documents", childId] });
 
@@ -689,19 +844,28 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
     }
   }
 
-  async function open(doc: Document) {
+  /** PDFs and pictures open in a new tab; anything else, or `save`, downloads the file. */
+  async function open(doc: Document, save = false) {
+    const viewable = !save && /^(application\/pdf|image\/|text\/plain)/.test(doc.mime_type ?? "");
+    // The tab is opened right away, inside the click, so the browser does not block it as a pop-up.
+    const tab = viewable ? window.open("", "_blank") : null;
     const { data, error } = await supabase.storage
       .from(BUCKET)
       .download(doc.storage_path);
     if (error || !data) {
+      tab?.close();
       toast.error(t("docs.openFail"));
       return;
     }
     const url = URL.createObjectURL(data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = doc.name;
-    link.click();
+    if (tab) {
+      tab.location.href = url;
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = doc.name;
+      link.click();
+    }
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
@@ -717,50 +881,103 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="surface p-6">
-        <Label htmlFor="doc-upload">{t("docs.upload")}</Label>
-        <p className="mt-1 text-sm text-muted-foreground">{t("docs.uploadHelp")}</p>
-        <div className="mt-4 flex items-center gap-3">
-          <Input
-            id="doc-upload"
-            type="file"
-            disabled={uploading}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void upload(file);
-              event.target.value = "";
-            }}
-          />
-          <Upload className="size-4 text-muted-foreground" aria-hidden />
-        </div>
-      </div>
+      {/* One target for both ways in: click to browse, or drop a file on it. */}
+      <label
+        htmlFor="doc-upload"
+        data-dragging={dragging || undefined}
+        aria-busy={uploading}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          const file = event.dataTransfer.files?.[0];
+          if (file && !uploading) void upload(file);
+        }}
+        className={cn(
+          "group dropzone flex flex-col items-center gap-2 px-6 py-8 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+          uploading ? "cursor-progress" : "cursor-pointer",
+        )}
+      >
+        <span className="grid size-12 place-content-center rounded-2xl bg-accent/12 text-accent transition-[background-color,color,transform] duration-200 ease-out group-hover:-translate-y-0.5 group-hover:bg-accent group-hover:text-accent-foreground group-data-[dragging]:-translate-y-0.5 group-data-[dragging]:bg-accent group-data-[dragging]:text-accent-foreground">
+          {uploading ? (
+            <LoaderCircle className="size-6 animate-spin" aria-hidden />
+          ) : (
+            <CloudUpload className="size-6" aria-hidden />
+          )}
+        </span>
+        <span className="mt-1 font-medium">{uploading ? t("docs.uploading") : t("docs.drop")}</span>
+        <span className="text-sm text-muted-foreground">{t("docs.uploadHelp")}</span>
+        <input
+          id="doc-upload"
+          type="file"
+          className="sr-only"
+          disabled={uploading}
+          aria-label={t("docs.upload")}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void upload(file);
+            event.target.value = "";
+          }}
+        />
+      </label>
 
-      {documents.length === 0 && <p className="text-sm text-muted-foreground">{t("docs.empty")}</p>}
-      <ul className="space-y-2">
+      {documents.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("docs.empty")}</p>}
+      <ul className={documents.length ? "surface divide-y divide-border overflow-hidden" : "hidden"}>
         {documents.map((doc) => (
-          <li key={doc.id} className="surface flex items-center gap-3 p-4">
-            <FileText className="size-5 text-accent" aria-hidden />
-            <span className="flex-1">
-              <span className="block">{doc.name}</span>
-              <span className="block text-xs text-muted-foreground">
+          <li key={doc.id} className="row flex items-center gap-3 px-5 py-3.5">
+            <span className="grid size-10 shrink-0 place-content-center rounded-xl bg-accent/15 text-accent">
+              <FileText className="size-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{doc.name}</span>
+              <span className="block text-xs text-muted-foreground tabular-nums">
                 {new Date(doc.created_at).toLocaleDateString(locale)}
-                {doc.size_bytes ? ` · ${Math.round(doc.size_bytes / 1024)} kB` : ""}
+                {doc.size_bytes ? ` · ${fileSize(doc.size_bytes, locale)}` : ""}
               </span>
             </span>
-            <Button variant="outline" size="sm" onClick={() => open(doc)}>
+            <Button variant="outline" size="sm" className="shrink-0" onClick={() => void open(doc)}>
               {t("docs.open")}
             </Button>
             <Button
               variant="ghost"
               size="icon"
+              className="shrink-0 text-muted-foreground hover:text-accent max-sm:hidden"
+              aria-label={`${t("docs.download")}: ${doc.name}`}
+              title={t("docs.download")}
+              onClick={() => void open(doc, true)}
+            >
+              <Download className="size-4" aria-hidden />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={trashButton}
               aria-label={t("entry.remove")}
-              onClick={() => remove(doc)}
+              onClick={() => {
+                setTarget(doc);
+                setConfirming(true);
+              }}
             >
               <Trash2 className="size-4" aria-hidden />
             </Button>
           </li>
         ))}
       </ul>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`${t("entry.remove")} ”${target?.name ?? ""}”?`}
+        description={t("docs.deleteHelp")}
+        confirmLabel={t("entry.remove")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => {
+          if (target) void remove(target);
+        }}
+      />
     </div>
   );
 }

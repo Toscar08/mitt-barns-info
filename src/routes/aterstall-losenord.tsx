@@ -57,8 +57,8 @@ function ResetPage() {
   }
 
   return (
-    <main className="calm-bg flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="surface w-full max-w-md p-8">
+    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
+      <div className="surface rise w-full max-w-md p-6 sm:p-8">
         <h1 className="text-3xl">{t("reset.title")}</h1>
         {ready ? (
           <form onSubmit={save} className="mt-6 space-y-4">
@@ -74,7 +74,7 @@ function ResetPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
               {loading ? t("auth.loading") : t("reset.save")}
             </Button>
           </form>

@@ -11,27 +11,24 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Button } from "@/components/ui/button";
+import { Spotlight } from "@/components/Spotlight";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PrefsProvider } from "@/lib/prefs";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Sidan finns inte</h2>
+    <div className="flex min-h-dvh items-center justify-center px-4">
+      <div className="surface rise w-full max-w-sm p-8 text-center">
+        <p className="text-6xl font-semibold tracking-tight text-accent tabular-nums">404</p>
+        <h1 className="mt-4 text-xl">Sidan finns inte</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Sidan du letar efter finns inte eller har flyttats.
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Till startsidan
-          </Link>
-        </div>
+        <Button asChild className="mt-6">
+          <Link to="/">Till startsidan</Link>
+        </Button>
       </div>
     </div>
   );
@@ -45,30 +42,24 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Sidan kunde inte laddas
-        </h1>
+    <div className="flex min-h-dvh items-center justify-center px-4">
+      <div className="surface w-full max-w-sm p-8 text-center">
+        <h1 className="text-xl">Sidan kunde inte laddas</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Något gick fel. Prova att ladda om eller gå tillbaka till startsidan.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
+          <Button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Försök igen
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Till startsidan
-          </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a href="/">Till startsidan</a>
+          </Button>
         </div>
       </div>
     </div>
@@ -89,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Barnmappen" },
-      { name: "theme-color", content: "#123B4A" },
+      { name: "theme-color", content: "#E3EBF7" },
       { property: "og:title", content: "Barnmappen" },
       {
         property: "og:description",
@@ -99,13 +90,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      // DM Sans is bundled with the app (see styles.css), so no visitor's address is sent to Google.
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap",
-      },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icon-512.png" },
@@ -121,7 +107,7 @@ const prefsBootScript = `try{var t=localStorage.getItem('barnmappen.theme');if(t
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="sv">
+    <html lang="sv" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -162,6 +148,7 @@ function RootComponent() {
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster />
+        <Spotlight />
       </PrefsProvider>
     </QueryClientProvider>
   );

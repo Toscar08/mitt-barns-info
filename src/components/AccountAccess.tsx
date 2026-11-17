@@ -36,7 +36,7 @@ function LaunchStarter() {
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   }
-  return <div className="rounded-lg bg-secondary p-4 text-sm text-secondary-foreground space-y-3">
+  return <div className="well space-y-3 p-4 text-sm">
     <p>{sv ? "Endast för administratör: tryck här direkt efter den första riktiga publiceringen. 30-dagarsfönstret räknas från detta exakta klockslag." : "Admin only: press right after the first real publication. The 30-day window starts at this exact time."}</p>
     <Button onClick={go} disabled={busy}>{sv ? "Starta lanseringen nu" : "Start launch now"}</Button>
   </div>;
@@ -46,17 +46,20 @@ export function AccountAccess() {
   const { lang, locale } = usePrefs();
   const sv = lang === "sv";
   const a = access.data;
-  if (!a) return <p>{access.error ? (sv ? "Åtkomsten kunde inte kontrolleras." : "Access could not be checked.") : (sv ? "Kontrollerar åtkomst…" : "Checking access…")}</p>;
+  if (!a) return <p className="surface p-6 text-sm text-muted-foreground">{access.error ? (sv ? "Åtkomsten kunde inte kontrolleras." : "Access could not be checked.") : (sv ? "Kontrollerar åtkomst…" : "Checking access…")}</p>;
   const labels = { paid: sv ? "Betald åtkomst" : "Paid access", complimentary: sv ? "Kostnadsfri åtkomst utan slutdatum" : "Complimentary access with no expiry", trial: sv ? "Gratis åtkomst" : "Free access", paused: sv ? "Åtkomst pausad" : "Access paused", launch_pending: sv ? "Lanseringen har inte startat" : "Launch has not started" };
-  const date = (value: string) => new Date(value).toLocaleString(locale);
-  return <section className="space-y-4 border-b border-border pb-8">
-    <h2 className="font-display text-2xl">{labels[a.status]}</h2>
-    {a.trialStartsAt && a.trialEndsAt && <dl className="space-y-2 text-sm">
+  const date = (value: string) => new Date(value).toLocaleString(locale, { dateStyle: "long", timeStyle: "short" });
+  // Trial dates say nothing about an account that has paid or been given access outright.
+  const timed = !["paid", "complimentary"].includes(a.status);
+  return <section className="surface space-y-4 p-6">
+    <h2 className="text-xl">{labels[a.status]}</h2>
+    {!timed && <p className="text-sm text-muted-foreground">{sv ? "Alla funktioner är upplåsta." : "All features are unlocked."}</p>}
+    {timed && a.trialStartsAt && a.trialEndsAt && <dl className="space-y-2 text-sm">
       <div><dt className="text-muted-foreground">{sv ? "Gratisperiodens start" : "Trial starts"}</dt><dd>{date(a.trialStartsAt)}</dd></div>
       <div><dt className="text-muted-foreground">{sv ? "Gratisperiodens slut" : "Trial ends"}</dt><dd>{date(a.trialEndsAt)}</dd></div>
       {a.status === "trial" && <div><dt className="text-muted-foreground">{sv ? "Återstår" : "Remaining"}</dt><dd>{Math.floor(a.remainingSeconds / 86400)} {sv ? "dagar" : "days"}, {Math.floor(a.remainingSeconds % 86400 / 3600)} {sv ? "timmar" : "hours"}, {Math.floor(a.remainingSeconds % 3600 / 60)} {sv ? "minuter" : "minutes"}</dd></div>}
     </dl>}
-    {!["paid", "complimentary"].includes(a.status) && <p className="text-sm text-muted-foreground">{sv ? "När gratisperioden löper ut pausas barnmappar, dokument och assistenten. Dina uppgifter raderas inte. Åtkomsten återställs först efter verifierad betalning." : "When the trial expires, folders, documents and the assistant pause. Your data is not deleted. Access resumes only after verified payment."}</p>}
+    {timed && <p className="text-sm text-muted-foreground">{sv ? "När gratisperioden löper ut pausas barnmappar, dokument och assistenten. Dina uppgifter raderas inte. Åtkomsten återställs först efter verifierad betalning." : "When the trial expires, folders, documents and the assistant pause. Your data is not deleted. Access resumes only after verified payment."}</p>}
     {a.isAdmin && !a.launchStartedAt && <LaunchStarter />}
     {a.status === "paused" && <Button asChild><Link to="/kop">{sv ? "Köp åtkomst" : "Buy access"}</Link></Button>}
   </section>;

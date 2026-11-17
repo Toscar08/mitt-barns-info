@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, FolderHeart } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { PrefToggles } from "@/components/PrefToggles";
+import { PublicHeader } from "@/components/Brand";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { getAccountAccess } from "@/lib/access.functions";
 import { createStripeCheckout } from "@/lib/payments.functions";
 import { usePrefs } from "@/lib/prefs";
 
@@ -39,6 +41,11 @@ function BuyPage() {
     supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
   }, []);
 
+  // Someone who already has access should not be offered to pay again.
+  const fetchAccess = useServerFn(getAccountAccess);
+  const access = useQuery({ queryKey: ["account-access"], queryFn: () => fetchAccess(), enabled: signedIn === true });
+  const owned = access.data && ["paid", "complimentary"].includes(access.data.status);
+
   async function buy() {
     setBusy(true);
     try {
@@ -55,48 +62,52 @@ function BuyPage() {
     : ["Your own private address", "Unlimited child profiles", "Documents up to 25 MB each", "AI assistant answering from your info", "Export and restore", "PIN lock and installable app"];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <Link to="/" className="flex items-center gap-2">
-          <FolderHeart className="size-5 text-accent" aria-hidden />
-          <span className="font-display text-xl">Barnmappen</span>
-        </Link>
-        <PrefToggles />
-      </header>
-      <main className="mx-auto max-w-xl px-6 py-12">
-        <h1 className="font-display text-4xl">{sv ? "Skaffa din egen Barnmapp" : "Get your own Barnmappen"}</h1>
-        <div className="mt-8 rounded-2xl border border-border bg-card p-8">
-          <p className="font-display text-3xl">
-            499 kr <span className="text-base text-muted-foreground">{sv ? "engångsköp, inkl. 25 % moms" : "one-time purchase, incl. 25% VAT"}</span>
+    <div className="min-h-dvh">
+      <PublicHeader />
+      <main className="rise mx-auto max-w-xl px-4 py-10 sm:px-6">
+        <h1 className="text-3xl sm:text-4xl">{sv ? "Skaffa din egen Barnmapp" : "Get your own Barnmappen"}</h1>
+        <div className="surface mt-8 p-6 sm:p-8">
+          <p className="text-4xl font-semibold tracking-tight tabular-nums">
+            499 kr <span className="block pt-1 text-sm font-normal tracking-normal text-muted-foreground sm:inline sm:pt-0">{sv ? "engångsköp, inkl. 25 % moms" : "one-time purchase, incl. 25% VAT"}</span>
           </p>
           <ul className="mt-6 space-y-3">
             {features.map((f) => (
-              <li key={f} className="flex gap-3">
-                <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+              <li key={f} className="group/f flex gap-3">
+                <span className="mt-0.5 grid size-5 shrink-0 place-content-center rounded-full bg-accent/15 text-accent transition-[background-color,color,transform] duration-200 ease-out group-hover/f:scale-110 group-hover/f:bg-accent group-hover/f:text-accent-foreground"><Check className="size-3" strokeWidth={3} aria-hidden /></span>
                 {f}
               </li>
             ))}
           </ul>
 
-          <div className="mt-6 rounded-lg bg-secondary p-4 text-sm text-secondary-foreground">
+          <div className="well mt-6 p-4 text-sm">
             {sv
               ? "Betalningen hanteras säkert av Stripe. Åtkomsten öppnas automatiskt när betalningen är verifierad."
               : "Payment is handled securely by Stripe. Access opens automatically once your payment is verified."}
           </div>
 
-          {signedIn === false ? (
+          {owned ? (
+            <div className="mt-6 space-y-3">
+              <p className="flex items-center gap-2 font-medium">
+                <span className="grid size-6 place-content-center rounded-full bg-accent text-accent-foreground"><Check className="size-3.5" strokeWidth={3} aria-hidden /></span>
+                {sv ? "Du har redan full åtkomst." : "You already have full access."}
+              </p>
+              <Button asChild size="lg" className="w-full">
+                <Link to="/barn">{sv ? "Till mina barn" : "To my children"}<ArrowRight aria-hidden /></Link>
+              </Button>
+            </div>
+          ) : signedIn === false ? (
             <div className="mt-6 space-y-3">
               <p className="text-sm text-muted-foreground">
                 {sv ? "Skapa först ett konto, sedan genomför du köpet." : "Create an account first, then complete the purchase."}
               </p>
-              <Button asChild className="w-full">
+              <Button asChild size="lg" variant="pop" className="w-full">
                 <Link to="/auth">{sv ? "Skapa konto / logga in" : "Create account / sign in"}</Link>
               </Button>
             </div>
           ) : (
             <>
             <div className="mt-6 space-y-3 text-sm">
-              <label className="flex gap-3">
+              <label className="flex cursor-pointer gap-3">
                 <Checkbox checked={agreeTerms} onCheckedChange={(v) => setAgreeTerms(v === true)} className="mt-0.5" />
                 <span>
                   {sv ? "Jag godkänner " : "I accept the "}
@@ -105,7 +116,7 @@ function BuyPage() {
                   <Link to="/integritetspolicy" className="underline">{sv ? "integritetspolicyn" : "privacy policy"}</Link>.
                 </span>
               </label>
-              <label className="flex gap-3">
+              <label className="flex cursor-pointer gap-3">
                 <Checkbox checked={agreeWithdrawal} onCheckedChange={(v) => setAgreeWithdrawal(v === true)} className="mt-0.5" />
                 <span>
                   {sv
@@ -114,7 +125,7 @@ function BuyPage() {
                 </span>
               </label>
             </div>
-            <Button className="mt-6 w-full" onClick={buy} disabled={busy || !agreeTerms || !agreeWithdrawal}>
+            <Button size="lg" variant="pop" className="mt-6 w-full" onClick={buy} disabled={busy || !agreeTerms || !agreeWithdrawal}>
               {sv ? "Betala 499 kr med Stripe" : "Pay 499 kr with Stripe"}
             </Button>
             </>

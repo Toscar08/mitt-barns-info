@@ -11,6 +11,7 @@ import { getMyWorkspace, unlockWithPin } from "@/lib/workspace.functions";
 import { usePrefs } from "@/lib/prefs";
 import { AccountAccess, useAccountAccess } from "@/components/AccountAccess";
 import { AppHeader } from "@/components/AppHeader";
+import { Loader } from "@/components/Brand";
 
 const UNLOCK_KEY = "barnmappen.unlocked";
 const ACTIVE_KEY = "barnmappen.lastActive";
@@ -100,19 +101,19 @@ export function PrivateGate({ children }: { children: ReactNode }) {
   }, [ws, unlocked, tryBiometric]);
 
   if (workspace.isLoading || access.isPending) {
-    return <div className="min-h-screen bg-background" />;
+    return <Loader />;
   }
   if (workspace.error) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-muted-foreground">
-        {workspace.error.message}
+      <div className="flex min-h-dvh items-center justify-center p-6">
+        <p className="surface max-w-sm p-6 text-center text-sm text-muted-foreground">{workspace.error.message}</p>
       </div>
     );
   }
   if (access.error || !access.data || !["paid", "trial", "complimentary"].includes(access.data.status)) return (
-    <div className="min-h-screen bg-background"><AppHeader /><main className="mx-auto max-w-2xl space-y-6 px-6 py-10"><AccountAccess /></main></div>
+    <div className="min-h-dvh"><AppHeader /><main className="rise mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6"><AccountAccess /></main></div>
   );
-  if (!ws) return <Navigate to="/aktivera" replace />;
+  if (!ws) return <Navigate to="/snabbstart" replace />;
   if (!ws.hasPin || unlocked) return <>{children}</>;
 
   async function submit(event: React.FormEvent) {
@@ -134,17 +135,21 @@ export function PrivateGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-background px-6">
-      <form onSubmit={submit} className="w-full max-w-xs space-y-5 text-center">
-        <LockKeyhole className="mx-auto size-8 text-accent" aria-hidden />
-        <h1 className="font-display text-2xl">{sv ? "Lås upp Barnmappen" : "Unlock Barnmappen"}</h1>
+    <main className="flex min-h-dvh items-center justify-center px-4">
+      <form onSubmit={submit} className="surface pop w-full max-w-xs space-y-5 p-7 text-center">
+        <span className="mx-auto grid size-14 place-content-center rounded-full bg-accent text-accent-foreground">
+          <LockKeyhole className="size-6" aria-hidden />
+        </span>
+        <h1 className="text-2xl">{sv ? "Lås upp Barnmappen" : "Unlock Barnmappen"}</h1>
         {bioId && (
           <Button type="button" variant="secondary" className="w-full gap-2" onClick={() => tryBiometric(bioId)}>
             <Fingerprint className="size-5" aria-hidden />
             {sv ? "Lås upp med Face ID / fingeravtryck" : "Unlock with Face ID / fingerprint"}
           </Button>
         )}
-        <p className="text-sm text-muted-foreground">{sv ? "Eller skriv din kod" : "Or enter your code"}</p>
+        <p className="text-sm text-muted-foreground">
+          {bioId ? (sv ? "Eller skriv din kod" : "Or enter your code") : sv ? "Skriv din PIN-kod" : "Enter your PIN"}
+        </p>
         <Input
           autoFocus={!bioId}
           inputMode="numeric"
@@ -153,11 +158,11 @@ export function PrivateGate({ children }: { children: ReactNode }) {
           maxLength={8}
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          className="text-center text-2xl tracking-[0.5em]"
+          className="h-14 text-center text-2xl tracking-[0.5em] md:text-2xl"
           aria-label="PIN"
         />
         {error && (
-          <p className="text-sm text-destructive">{locked ? (sv ? "För många försök. Vänta 15 minuter." : "Too many attempts. Wait 15 minutes.") : sv ? "Fel kod." : "Wrong code."}</p>
+          <p className="text-sm text-destructive" role="alert">{locked ? (sv ? "För många fel försök. Koden är spärrad en stund – försök igen senare." : "Too many wrong attempts. The code is locked for a while – try again later.") : sv ? "Fel kod." : "Wrong code."}</p>
         )}
         <Button type="submit" className="w-full" disabled={busy || pin.length < 4}>
           {sv ? "Lås upp" : "Unlock"}

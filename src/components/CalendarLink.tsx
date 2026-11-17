@@ -43,7 +43,7 @@ export function CalendarLink({ childId }: { childId: string }) {
   };
 
   return (
-    <section className="mb-8 rounded-xl border bg-card p-5">
+    <section className="surface mt-4 p-6">
       <h2 className="text-xl">{sv ? "Koppla extern kalender" : "Connect external calendar"}</h2>
       {cal.data ? (
         <div className="mt-3 space-y-3">

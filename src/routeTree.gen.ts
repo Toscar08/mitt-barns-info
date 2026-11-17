@@ -19,6 +19,7 @@ import { Route as VillkorRouteImport } from './routes/villkor'
 import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticated/aktivera'
 import { Route as AuthenticatedFragaRouteImport } from './routes/_authenticated/fraga'
 import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authenticated/installningar'
+import { Route as AuthenticatedSnabbstartRouteImport } from './routes/_authenticated/snabbstart'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
 import { Route as AuthenticatedFSlugRouteImport } from './routes/_authenticated/f.$slug'
@@ -74,6 +75,11 @@ const AuthenticatedInstallningarRoute =
     path: '/installningar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSnabbstartRoute = AuthenticatedSnabbstartRouteImport.update({
+  id: '/snabbstart',
+  path: '/snabbstart',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBarnIndexRoute = AuthenticatedBarnIndexRouteImport.update({
   id: '/barn/',
   path: '/barn/',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/aktivera': typeof AuthenticatedAktiveraRoute
   '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
+  '/snabbstart': typeof AuthenticatedSnabbstartRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/aktivera': typeof AuthenticatedAktiveraRoute
   '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
+  '/snabbstart': typeof AuthenticatedSnabbstartRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/aktivera': typeof AuthenticatedAktiveraRoute
   '/_authenticated/fraga': typeof AuthenticatedFragaRoute
   '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
+  '/_authenticated/snabbstart': typeof AuthenticatedSnabbstartRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/aktivera'
     | '/fraga'
     | '/installningar'
+    | '/snabbstart'
     | '/barn/$childId'
     | '/f/$slug'
     | '/api/public/stripe-webhook'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/aktivera'
     | '/fraga'
     | '/installningar'
+    | '/snabbstart'
     | '/barn/$childId'
     | '/f/$slug'
     | '/api/public/stripe-webhook'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/aktivera'
     | '/_authenticated/fraga'
     | '/_authenticated/installningar'
+    | '/_authenticated/snabbstart'
     | '/_authenticated/barn/$childId'
     | '/_authenticated/f/$slug'
     | '/api/public/stripe-webhook'
@@ -275,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInstallningarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/snabbstart': {
+      id: '/_authenticated/snabbstart'
+      path: '/snabbstart'
+      fullPath: '/snabbstart'
+      preLoaderRoute: typeof AuthenticatedSnabbstartRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/barn/': {
       id: '/_authenticated/barn/'
       path: '/barn'
@@ -310,6 +329,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAktiveraRoute: typeof AuthenticatedAktiveraRoute
   AuthenticatedFragaRoute: typeof AuthenticatedFragaRoute
   AuthenticatedInstallningarRoute: typeof AuthenticatedInstallningarRoute
+  AuthenticatedSnabbstartRoute: typeof AuthenticatedSnabbstartRoute
   AuthenticatedBarnChildIdRoute: typeof AuthenticatedBarnChildIdRoute
   AuthenticatedFSlugRoute: typeof AuthenticatedFSlugRoute
   AuthenticatedBarnIndexRoute: typeof AuthenticatedBarnIndexRoute
@@ -319,6 +339,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAktiveraRoute: AuthenticatedAktiveraRoute,
   AuthenticatedFragaRoute: AuthenticatedFragaRoute,
   AuthenticatedInstallningarRoute: AuthenticatedInstallningarRoute,
+  AuthenticatedSnabbstartRoute: AuthenticatedSnabbstartRoute,
   AuthenticatedBarnChildIdRoute: AuthenticatedBarnChildIdRoute,
   AuthenticatedFSlugRoute: AuthenticatedFSlugRoute,
   AuthenticatedBarnIndexRoute: AuthenticatedBarnIndexRoute,

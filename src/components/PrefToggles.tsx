@@ -7,13 +7,14 @@ export function PrefToggles() {
   const { lang, theme, toggleLang, toggleTheme, t } = usePrefs();
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center">
       <Button
         variant="ghost"
-        size="sm"
+        size="icon"
         onClick={toggleLang}
         aria-label={t("lang.switch")}
         title={t("lang.switch")}
+        className="text-[13px] font-semibold tracking-wide"
       >
         {lang === "sv" ? "SV" : "EN"}
       </Button>
@@ -24,11 +25,7 @@ export function PrefToggles() {
         aria-label={theme === "dark" ? t("theme.light") : t("theme.dark")}
         title={theme === "dark" ? t("theme.light") : t("theme.dark")}
       >
-        {theme === "dark" ? (
-          <Sun className="size-4" aria-hidden />
-        ) : (
-          <Moon className="size-4" aria-hidden />
-        )}
+        {theme === "dark" ? <Sun aria-hidden /> : <Moon aria-hidden />}
       </Button>
     </div>
   );

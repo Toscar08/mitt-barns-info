@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { myActivationCode, setPin, updateWorkspace } from "@/lib/workspace.functions";
 import { usePrefs } from "@/lib/prefs";
 import { AccountAccess } from "@/components/AccountAccess";
+import { DeleteAccount } from "@/components/DeleteAccount";
 
 export const Route = createFileRoute("/_authenticated/installningar")({
   head: () => ({
@@ -44,6 +46,7 @@ function SettingsPage() {
   const [slug, setSlug] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [pin, setPinValue] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (workspace.data) {
@@ -55,6 +58,16 @@ function SettingsPage() {
   const ws = workspace.data;
   if (!ws) return null;
   const address = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${ws.slug}`;
+
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error(sv ? "Kunde inte kopiera adressen." : "Couldn't copy the address.");
+    }
+  }
 
   async function saveInfo(event: React.FormEvent) {
     event.preventDefault();
@@ -75,15 +88,21 @@ function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh">
       <AppHeader />
-      <main className="mx-auto max-w-2xl space-y-10 px-6 py-10">
-        <h1 className="font-display text-3xl">{sv ? "Inställningar" : "Settings"}</h1>
+      <main className="rise mx-auto max-w-2xl space-y-5 px-4 py-8 sm:px-6">
+        <h1 className="text-3xl sm:text-4xl">{sv ? "Inställningar" : "Settings"}</h1>
         <AccountAccess />
 
-        <section className="space-y-2 rounded-xl border border-border bg-card p-6">
-          <h2 className="font-display text-xl">{sv ? "Din adress" : "Your address"}</h2>
-          <p className="break-all font-mono text-sm">{address}</p>
+        <section className="surface space-y-2 p-6">
+          <h2 className="text-xl">{sv ? "Din adress" : "Your address"}</h2>
+          <div className="well flex items-center gap-2 py-1.5 pr-1.5 pl-3.5">
+            <p className="min-w-0 flex-1 font-mono text-sm break-all">{address}</p>
+            <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={copyAddress}>
+              {copied ? <Check className="text-accent" aria-hidden /> : <Copy aria-hidden />}
+              <span aria-live="polite">{copied ? (sv ? "Kopierad" : "Copied") : sv ? "Kopiera" : "Copy"}</span>
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground">
             {sv
               ? "Spara som bokmärke eller installera som app via webbläsarens meny (\"Lägg till på hemskärmen\")."
@@ -91,8 +110,8 @@ function SettingsPage() {
           </p>
         </section>
 
-        <form onSubmit={saveInfo} className="space-y-4 rounded-xl border border-border bg-card p-6">
-          <h2 className="font-display text-xl">{sv ? "Namn och adress" : "Name and address"}</h2>
+        <form onSubmit={saveInfo} className="surface space-y-4 p-6">
+          <h2 className="text-xl">{sv ? "Namn och adress" : "Name and address"}</h2>
           <div className="space-y-2">
             <Label htmlFor="s-slug">{sv ? "Adressnamn" : "Address name"}</Label>
             <Input id="s-slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
@@ -104,8 +123,8 @@ function SettingsPage() {
           <Button type="submit">{sv ? "Spara" : "Save"}</Button>
         </form>
 
-        <section className="space-y-4 rounded-xl border border-border bg-card p-6">
-          <h2 className="font-display text-xl">{sv ? "PIN-kod" : "PIN code"}</h2>
+        <section className="surface space-y-4 p-6">
+          <h2 className="text-xl">{sv ? "PIN-kod" : "PIN code"}</h2>
           <p className="text-sm text-muted-foreground">
             {ws.hasPin
               ? sv
@@ -115,7 +134,7 @@ function SettingsPage() {
                 ? "Lägg till en PIN-kod (4–8 siffror) som extra lås."
                 : "Add a PIN (4–8 digits) as an extra lock."}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Input
               inputMode="numeric"
               type="password"
@@ -136,18 +155,20 @@ function SettingsPage() {
           </div>
           <p className="text-xs text-muted-foreground">
             {sv
-              ? "Face ID/Touch ID och BankID är planerat men inte aktiverat ännu."
-              : "Face ID/Touch ID and BankID are planned but not enabled yet."}
+              ? "Med PIN-kod på kan du också låsa upp med Face ID eller fingeravtryck. Det slår du på från Fråga-sidan."
+              : "With a PIN set you can also unlock with Face ID or fingerprint. Turn it on from the Ask page."}
           </p>
         </section>
 
         {code.data && (
-          <section className="space-y-2 rounded-xl border border-border bg-card p-6">
-            <h2 className="font-display text-xl">{sv ? "Aktiveringskod" : "Activation code"}</h2>
+          <section className="surface space-y-2 p-6">
+            <h2 className="text-xl">{sv ? "Aktiveringskod" : "Activation code"}</h2>
             <p className="font-mono">{code.data.code}</p>
             <p className="text-sm text-muted-foreground">{sv ? "Använd – behövs inte för inloggning." : "Used – not needed to sign in."}</p>
           </section>
         )}
+
+        <DeleteAccount hasPin={ws.hasPin} />
       </main>
     </div>
   );
