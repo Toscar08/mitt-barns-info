@@ -430,14 +430,10 @@ export type Database = {
       }
       verified_payments: {
         Row: {
-          access_until: string | null
           amount_cents: number
           currency: string
           environment: string
           id: string
-          plan: string
-          provider_customer: string | null
-          provider_subscription: string | null
           provider: string
           provider_reference: string
           revoked_at: string | null
@@ -445,14 +441,10 @@ export type Database = {
           verified_at: string
         }
         Insert: {
-          access_until?: string | null
           amount_cents: number
           currency: string
           environment: string
           id?: string
-          plan: string
-          provider_customer?: string | null
-          provider_subscription?: string | null
           provider: string
           provider_reference: string
           revoked_at?: string | null
@@ -460,14 +452,10 @@ export type Database = {
           verified_at?: string
         }
         Update: {
-          access_until?: string | null
           amount_cents?: number
           currency?: string
           environment?: string
           id?: string
-          plan?: string
-          provider_customer?: string | null
-          provider_subscription?: string | null
           provider?: string
           provider_reference?: string
           revoked_at?: string | null
