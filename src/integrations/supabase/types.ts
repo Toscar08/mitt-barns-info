@@ -430,34 +430,46 @@ export type Database = {
       }
       verified_payments: {
         Row: {
+          access_until: string | null
           amount_cents: number
           currency: string
           environment: string
           id: string
+          plan: string
           provider: string
+          provider_customer: string | null
           provider_reference: string
+          provider_subscription: string | null
           revoked_at: string | null
           user_id: string
           verified_at: string
         }
         Insert: {
+          access_until?: string | null
           amount_cents: number
           currency: string
           environment: string
           id?: string
+          plan: string
           provider: string
+          provider_customer?: string | null
           provider_reference: string
+          provider_subscription?: string | null
           revoked_at?: string | null
           user_id: string
           verified_at?: string
         }
         Update: {
+          access_until?: string | null
           amount_cents?: number
           currency?: string
           environment?: string
           id?: string
+          plan?: string
           provider?: string
+          provider_customer?: string | null
           provider_reference?: string
+          provider_subscription?: string | null
           revoked_at?: string | null
           user_id?: string
           verified_at?: string
@@ -520,6 +532,7 @@ export type Database = {
       claim_launch_trial: { Args: { target_user: string }; Returns: undefined }
       get_my_campaign_access: { Args: never; Returns: Json }
       has_account_access: { Args: never; Returns: boolean }
+      has_paid_access: { Args: { target_user: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
