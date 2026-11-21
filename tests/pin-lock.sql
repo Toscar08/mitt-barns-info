@@ -1,4 +1,4 @@
--- Execute against PostgreSQL after migration 0007; all fixtures roll back.
+-- Execute against PostgreSQL after migration 0008; all fixtures roll back.
 -- Uses a complimentary grant so the account has access, then checks that the PIN gates the data.
 BEGIN;
 CREATE FUNCTION pg_temp.assert_rule(ok boolean, rule text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAILED: %',rule; END IF; END; $$;

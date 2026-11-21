@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
- * Server side of the PIN lock (migration 0007). An unlock belongs to one sign-in session and
+ * Server side of the PIN lock (migration 0008). An unlock belongs to one sign-in session and
  * runs out unless the app keeps extending it while the parent is active.
  *
  * Every call here tolerates the tables not existing yet: before the migration is applied the

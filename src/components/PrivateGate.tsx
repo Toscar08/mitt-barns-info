@@ -52,7 +52,7 @@ type ServerLock = "open" | "locked" | "legacy";
 
 /**
  * The PIN lock. The database decides whether this sign-in session may read the folders
- * (migration 0007); this screen asks for the PIN when it may not. The browser's own idle timer
+ * (migration 0008); this screen asks for the PIN when it may not. The browser's own idle timer
  * only ever locks sooner, never later. Before the migration ("legacy") the browser alone decides,
  * as it always did.
  */

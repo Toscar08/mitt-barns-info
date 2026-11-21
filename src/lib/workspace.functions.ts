@@ -115,7 +115,7 @@ export const setPin = createServerFn({ method: "POST" })
 
 /**
  * "open" when the database lets this session at the folders, "locked" when the PIN is needed,
- * "legacy" before migration 0007, when the database does not enforce the PIN at all.
+ * "legacy" before migration 0008, when the database does not enforce the PIN at all.
  */
 async function lockState(supabase: {
   rpc: (fn: "pin_unlocked") => PromiseLike<{ data: boolean | null; error: { code?: string } | null }>;

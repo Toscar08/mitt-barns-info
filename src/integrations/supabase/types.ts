@@ -481,10 +481,10 @@ export type Database = {
           environment: string
           id: string
           plan: string
-          provider_customer: string | null
-          provider_subscription: string | null
           provider: string
+          provider_customer: string | null
           provider_reference: string
+          provider_subscription: string | null
           revoked_at: string | null
           user_id: string
           verified_at: string
@@ -496,10 +496,10 @@ export type Database = {
           environment: string
           id?: string
           plan: string
-          provider_customer?: string | null
-          provider_subscription?: string | null
           provider: string
+          provider_customer?: string | null
           provider_reference: string
+          provider_subscription?: string | null
           revoked_at?: string | null
           user_id: string
           verified_at?: string
@@ -511,10 +511,10 @@ export type Database = {
           environment?: string
           id?: string
           plan?: string
-          provider_customer?: string | null
-          provider_subscription?: string | null
           provider?: string
+          provider_customer?: string | null
           provider_reference?: string
+          provider_subscription?: string | null
           revoked_at?: string | null
           user_id?: string
           verified_at?: string
