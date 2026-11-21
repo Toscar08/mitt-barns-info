@@ -14,3 +14,4 @@
 - [x] Subscription migration applied by Lovable (0007_subscription_payments_v2).
 - [ ] Enable the Stripe customer portal (cancel + switch plan) in the Stripe dashboard; subscribe the webhook to invoice.paid.
 - [ ] Apply migration 0008 (server-enforced PIN lock).
+- [ ] Apply migration 0009 (family sharing) after 0008.

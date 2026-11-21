@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useChildren } from "@/lib/children";
+import { useFamily, useMyId } from "@/lib/family";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/barn/")({
@@ -76,6 +77,11 @@ function ChildrenPage() {
   });
 
   const children = useChildren();
+  // Folders shared by another family carry that family's name, and only editable ones go to quick add.
+  const me = useMyId();
+  const family = useFamily();
+  const familyOf = (ownerId: string) => family.data?.joined.find((f) => f.ownerId === ownerId);
+  const editableKids = (children.data ?? []).filter((kid) => kid.user_id === me.data || familyOf(kid.user_id)?.role === "editor");
 
   const addChild = useMutation({
     mutationFn: async () => {
@@ -195,7 +201,7 @@ function ChildrenPage() {
           </div>
         </div>
 
-        {!!children.data?.length && <QuickAdd kids={children.data} />}
+        {editableKids.length > 0 && <QuickAdd kids={editableKids} />}
 
         <div className="rise mt-6 [--i:2]">
           <div className="relative">
@@ -308,6 +314,11 @@ function ChildrenPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xl font-semibold tracking-tight">{child.name}</span>
+                {child.user_id !== me.data && familyOf(child.user_id) && (
+                  <span className="block truncate text-xs font-medium text-accent">
+                    {t("family.sharedBy")} {familyOf(child.user_id)!.name}
+                  </span>
+                )}
                 <span className="block text-sm text-muted-foreground">
                   {child.birth_date
                     ? `${t("children.born")} ${new Date(child.birth_date).toLocaleDateString(locale)}`

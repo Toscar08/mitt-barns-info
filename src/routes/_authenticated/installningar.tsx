@@ -14,6 +14,7 @@ import { myActivationCode, setPin, updateWorkspace } from "@/lib/workspace.funct
 import { usePrefs } from "@/lib/prefs";
 import { AccountAccess } from "@/components/AccountAccess";
 import { DeleteAccount } from "@/components/DeleteAccount";
+import { FamilySharing } from "@/components/FamilySharing";
 
 export const Route = createFileRoute("/_authenticated/installningar")({
   validateSearch: (search: Record<string, unknown>): { betalt?: boolean | undefined } => ({
@@ -73,7 +74,19 @@ function SettingsPage() {
   }, [workspace.data]);
 
   const ws = workspace.data;
-  if (!ws) return null;
+  // Someone who has only joined another family has no site of their own to set up.
+  if (!ws) {
+    return (
+      <div className="min-h-dvh">
+        <AppHeader />
+        <main className="rise mx-auto max-w-2xl space-y-5 px-4 py-8 sm:px-6">
+          <h1 className="text-3xl sm:text-4xl">{sv ? "Inställningar" : "Settings"}</h1>
+          <FamilySharing isOwner={false} />
+          <DeleteAccount hasPin={false} />
+        </main>
+      </div>
+    );
+  }
   const address = `${typeof window !== "undefined" ? window.location.origin : ""}/f/${ws.slug}`;
 
   async function copyAddress() {
@@ -190,6 +203,8 @@ function SettingsPage() {
             <p className="text-sm text-muted-foreground">{sv ? "Använd – behövs inte för inloggning." : "Used – not needed to sign in."}</p>
           </section>
         )}
+
+        <FamilySharing isOwner />
 
         <DeleteAccount hasPin={ws.hasPin} />
       </main>

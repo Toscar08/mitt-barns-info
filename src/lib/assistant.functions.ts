@@ -1,4 +1,5 @@
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { canUseApp } from "@/lib/app-access";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -18,8 +19,7 @@ export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AskInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const access = await supabase.rpc("has_account_access");
-    if (access.error || access.data !== true) throw new Error("Åtkomst pausad. Betalning krävs för att använda assistenten.");
+    if (!(await canUseApp(supabase))) throw new Error("Åtkomst pausad. Betalning krävs för att använda assistenten.");
     const lang = data.lang;
 
     // RLS limits every query to the signed-in user's own rows.

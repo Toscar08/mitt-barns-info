@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { canUseApp } from "@/lib/app-access";
 import {
   CHILD_FIELDS,
   ENTRY_CATEGORIES,
@@ -118,8 +119,7 @@ export const sortQuickNote = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SortInput.parse(input))
   .handler(async ({ data, context }): Promise<SortResult> => {
     const { supabase } = context;
-    const access = await supabase.rpc("has_account_access");
-    if (access.error || access.data !== true) throw new Error("Åtkomst pausad. Betalning krävs för att använda assistenten.");
+    if (!(await canUseApp(supabase))) throw new Error("Åtkomst pausad. Betalning krävs för att använda assistenten.");
 
     // RLS limits this to the signed-in user's own children. Only names go to the AI, never the folders.
     const kids = await supabase.from("children").select("id, name").order("created_at", { ascending: true });

@@ -20,6 +20,7 @@ import { Route as AuthenticatedAktiveraRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFragaRouteImport } from './routes/_authenticated/fraga'
 import { Route as AuthenticatedInstallningarRouteImport } from './routes/_authenticated/installningar'
 import { Route as AuthenticatedSnabbstartRouteImport } from './routes/_authenticated/snabbstart'
+import { Route as InbjudanTokenRouteImport } from './routes/inbjudan.$token'
 import { Route as AuthenticatedBarnIndexRouteImport } from './routes/_authenticated/barn.index'
 import { Route as AuthenticatedBarnChildIdRouteImport } from './routes/_authenticated/barn.$childId'
 import { Route as AuthenticatedFSlugRouteImport } from './routes/_authenticated/f.$slug'
@@ -80,6 +81,11 @@ const AuthenticatedSnabbstartRoute = AuthenticatedSnabbstartRouteImport.update({
   path: '/snabbstart',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const InbjudanTokenRoute = InbjudanTokenRouteImport.update({
+  id: '/inbjudan/$token',
+  path: '/inbjudan/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBarnIndexRoute = AuthenticatedBarnIndexRouteImport.update({
   id: '/barn/',
   path: '/barn/',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/snabbstart': typeof AuthenticatedSnabbstartRoute
+  '/inbjudan/$token': typeof InbjudanTokenRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/fraga': typeof AuthenticatedFragaRoute
   '/installningar': typeof AuthenticatedInstallningarRoute
   '/snabbstart': typeof AuthenticatedSnabbstartRoute
+  '/inbjudan/$token': typeof InbjudanTokenRoute
   '/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/fraga': typeof AuthenticatedFragaRoute
   '/_authenticated/installningar': typeof AuthenticatedInstallningarRoute
   '/_authenticated/snabbstart': typeof AuthenticatedSnabbstartRoute
+  '/inbjudan/$token': typeof InbjudanTokenRoute
   '/_authenticated/barn/$childId': typeof AuthenticatedBarnChildIdRoute
   '/_authenticated/f/$slug': typeof AuthenticatedFSlugRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/fraga'
     | '/installningar'
     | '/snabbstart'
+    | '/inbjudan/$token'
     | '/barn/$childId'
     | '/f/$slug'
     | '/api/public/stripe-webhook'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/fraga'
     | '/installningar'
     | '/snabbstart'
+    | '/inbjudan/$token'
     | '/barn/$childId'
     | '/f/$slug'
     | '/api/public/stripe-webhook'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fraga'
     | '/_authenticated/installningar'
     | '/_authenticated/snabbstart'
+    | '/inbjudan/$token'
     | '/_authenticated/barn/$childId'
     | '/_authenticated/f/$slug'
     | '/api/public/stripe-webhook'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   IntegritetspolicyRoute: typeof IntegritetspolicyRoute
   KopRoute: typeof KopRoute
   VillkorRoute: typeof VillkorRoute
+  InbjudanTokenRoute: typeof InbjudanTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSnabbstartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/inbjudan/$token': {
+      id: '/inbjudan/$token'
+      path: '/inbjudan/$token'
+      fullPath: '/inbjudan/$token'
+      preLoaderRoute: typeof InbjudanTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/barn/': {
       id: '/_authenticated/barn/'
       path: '/barn'
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegritetspolicyRoute: IntegritetspolicyRoute,
   KopRoute: KopRoute,
   VillkorRoute: VillkorRoute,
+  InbjudanTokenRoute: InbjudanTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

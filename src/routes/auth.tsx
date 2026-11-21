@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { PrefToggles } from "@/components/PrefToggles";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { afterSignIn } from "@/lib/family";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/auth")({
@@ -53,7 +54,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/fraga", replace: true });
+      if (data.session) navigate({ ...afterSignIn(), replace: true });
     });
   }, [navigate]);
 
@@ -72,11 +73,11 @@ function AuthPage() {
           setSentEmail(true);
           return;
         }
-        navigate({ to: "/fraga" });
+        navigate(afterSignIn());
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/fraga" });
+        navigate(afterSignIn());
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.error"));
@@ -97,7 +98,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/fraga" });
+    navigate(afterSignIn());
   }
 
   return (

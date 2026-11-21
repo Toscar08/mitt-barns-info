@@ -61,8 +61,8 @@ function BuyPage() {
   }
 
   const features = sv
-    ? ["Egen privat adress", "Obegränsat antal barnprofiler", "Dokument upp till 25 MB per fil", "AI-assistent som svarar utifrån din information", "Export och återställning", "PIN-lås och installation som app"]
-    : ["Your own private address", "Unlimited child profiles", "Documents up to 25 MB each", "AI assistant answering from your info", "Export and restore", "PIN lock and installable app"];
+    ? ["Egen privat adress", "Obegränsat antal barnprofiler", "Dela med upp till 6 i familjen", "Dokument upp till 25 MB per fil", "AI-assistent som svarar utifrån din information", "Export och återställning", "PIN-lås och installation som app"]
+    : ["Your own private address", "Unlimited child profiles", "Share with up to 6 family members", "Documents up to 25 MB each", "AI assistant answering from your info", "Export and restore", "PIN lock and installable app"];
 
   return (
     <div className="min-h-dvh">

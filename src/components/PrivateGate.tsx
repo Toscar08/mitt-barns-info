@@ -19,6 +19,7 @@ import { usePrefs } from "@/lib/prefs";
 import { AccountAccess, useAccountAccess } from "@/components/AccountAccess";
 import { AppHeader } from "@/components/AppHeader";
 import { Loader } from "@/components/Brand";
+import { useFamily } from "@/lib/family";
 
 const UNLOCK_KEY = "barnmappen.unlocked";
 const ACTIVE_KEY = "barnmappen.lastActive";
@@ -59,6 +60,9 @@ type ServerLock = "open" | "locked" | "legacy";
 export function PrivateGate({ children }: { children: ReactNode }) {
   const workspace = useWorkspace();
   const access = useAccountAccess();
+  // Someone invited into a family uses that family's access, with or without their own.
+  const family = useFamily();
+  const inFamily = family.data?.joined.some((f) => f.active) ?? false;
   const { lang } = usePrefs();
   const queryClient = useQueryClient();
   const unlock = useServerFn(unlockWithPin);
@@ -179,7 +183,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
     };
   }, [ws, unlocked, tryBiometric, lockHere, keepAlive]);
 
-  if (workspace.isLoading || access.isPending) {
+  if (workspace.isLoading || access.isPending || family.isPending) {
     return <Loader />;
   }
   if (workspace.error) {
@@ -189,9 +193,11 @@ export function PrivateGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (access.error || !access.data || !["paid", "trial", "complimentary"].includes(access.data.status)) return (
+  const ownAccess = !!access.data && ["paid", "trial", "complimentary"].includes(access.data.status);
+  if (!ownAccess && !inFamily) return (
     <div className="min-h-dvh"><AppHeader /><main className="rise mx-auto max-w-2xl space-y-6 px-4 py-8 sm:px-6"><AccountAccess /></main></div>
   );
+  if (!ws && inFamily) return <>{children}</>;
   if (!ws) return <Navigate to="/snabbstart" replace />;
   if (!ws.hasPin || unlocked) return <>{children}</>;
   if (checking) return <Loader />;

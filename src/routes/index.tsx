@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Brand } from "@/components/Brand";
 import { PrefToggles } from "@/components/PrefToggles";
 import { supabase } from "@/integrations/supabase/client";
+import { afterSignIn } from "@/lib/family";
 import { usePrefs } from "@/lib/prefs";
 import heroImage from "@/assets/hero.webp";
 import { kronor, PLANS, yearlyPerMonth } from "@/lib/pricing";
@@ -45,7 +46,7 @@ function Landing() {
       setSignedIn(Boolean(session));
       if (session && sessionStorage.getItem("barnmappen.afterAuth")) {
         sessionStorage.removeItem("barnmappen.afterAuth");
-        void navigate({ to: "/fraga", replace: true });
+        void navigate({ ...afterSignIn(), replace: true });
       }
     };
     supabase.auth.getSession().then(({ data }) => settle(data.session));
@@ -86,6 +87,7 @@ function Landing() {
   const included = [
     L("Egen privat adress för familjen", "Your family's own private address"),
     L("Obegränsat antal barn", "Unlimited children"),
+    L("Dela med familj och barnvakt", "Share with family and babysitter"),
     L("Dokument upp till 25 MB per fil", "Documents up to 25 MB each"),
     L("AI-assistent", "AI assistant"),
     L("Export och återställning", "Export and restore"),

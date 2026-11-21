@@ -30,6 +30,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { askAssistant } from "@/lib/assistant.functions";
+import { canUseApp } from "@/lib/app-access";
+import { canEdit, useFolderRole } from "@/lib/family";
 import { usePrefs, type TranslationKey } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
 
@@ -134,9 +136,14 @@ function ChildFolder() {
     if (childName) document.title = `${childName} – Barnmappen`;
   }, [childName]);
 
+  // Members of a shared family may read (viewer) or also change (editor). The database enforces it;
+  // this only hides what they cannot use.
+  const folder = useFolderRole(child.data?.user_id);
+  const editable = canEdit(folder.role);
+  const owner = folder.role === "owner";
+
   async function exportFolder() {
-    const access = await supabase.rpc("has_account_access");
-    if (access.error || access.data !== true) { toast.error("Åtkomst pausad / Access paused"); return; }
+    if (!(await canUseApp(supabase))) { toast.error("Åtkomst pausad / Access paused"); return; }
     const payload = {
       exportedAt: new Date().toISOString(),
       child: child.data,
@@ -211,17 +218,26 @@ function ChildFolder() {
                   ? `${t("children.born")} ${new Date(child.data.birth_date).toLocaleDateString(locale)}`
                   : t("children.noBirth")}
               </p>
+              {folder.family && (
+                <p className="mt-1 text-xs font-medium text-accent">
+                  {t("family.sharedBy")} {folder.family} · {folder.role === "viewer" ? t("family.viewer") : t("family.editor")}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={exportFolder}>
-              <Download aria-hidden />
-              {t("folder.backup")}
-            </Button>
-            <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
-              <Trash2 aria-hidden />
-              {t("folder.delete")}
-            </Button>
+            {editable && (
+              <Button variant="outline" onClick={exportFolder}>
+                <Download aria-hidden />
+                {t("folder.backup")}
+              </Button>
+            )}
+            {owner && (
+              <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
+                <Trash2 aria-hidden />
+                {t("folder.delete")}
+              </Button>
+            )}
           </div>
         </div>
         <ConfirmDialog
@@ -246,10 +262,11 @@ function ChildFolder() {
           </TabsList>
 
           <TabsContent value="person">
-            <InfoForm child={child.data} />
+            <InfoForm child={child.data} editable={editable} />
           </TabsContent>
           <TabsContent value="contacts">
             <Entries
+              editable={editable}
               childId={childId}
               category="contacts"
               entries={(entries.data ?? []).filter((e) => e.category === "contacts")}
@@ -258,8 +275,9 @@ function ChildFolder() {
             />
           </TabsContent>
           <TabsContent value="calendar">
-            <CalendarLink childId={childId} />
+            {owner && <CalendarLink childId={childId} />}
             <Entries
+              editable={editable}
               childId={childId}
               category="calendar"
               entries={(entries.data ?? []).filter((e) => e.category === "calendar")}
@@ -267,13 +285,14 @@ function ChildFolder() {
               contentPlaceholder="calendar.contentPlaceholder"
             />
             <h2 className="mt-10 text-2xl">{t("tasks.heading")}</h2>
-            <TaskList childId={childId} tasks={tasks.data ?? []} />
+            <TaskList childId={childId} tasks={tasks.data ?? []} editable={editable} />
           </TabsContent>
           <TabsContent value="documents">
-            <Documents childId={childId} documents={documents.data ?? []} />
+            <Documents childId={childId} ownerId={child.data.user_id} documents={documents.data ?? []} editable={editable} />
           </TabsContent>
           <TabsContent value="custom">
             <Entries
+              editable={editable}
               childId={childId}
               category="custom"
               entries={(entries.data ?? []).filter(
@@ -356,7 +375,7 @@ function Assistant({ childId, childName }: { childId: string; childName: string 
   );
 }
 
-function InfoForm({ child }: { child: Child }) {
+function InfoForm({ child, editable }: { child: Child; editable: boolean }) {
   const queryClient = useQueryClient();
   const { t } = usePrefs();
   const [form, setForm] = useState({
@@ -428,6 +447,7 @@ function InfoForm({ child }: { child: Child }) {
         save.mutate();
       }}
     >
+      <fieldset disabled={!editable} className="contents">
       <div className="grid gap-5 sm:grid-cols-2">
         {field("name", "person.name")}
         {field("birth_date", "person.birth", "date")}
@@ -446,9 +466,12 @@ function InfoForm({ child }: { child: Child }) {
         {field("passport_expiry", "person.passportExpiry", "date")}
       </div>
       {area("notes", "person.summary", "person.summaryPlaceholder")}
-      <Button type="submit" disabled={save.isPending}>
-        {t("folder.save")}
-      </Button>
+      {editable && (
+        <Button type="submit" disabled={save.isPending}>
+          {t("folder.save")}
+        </Button>
+      )}
+      </fieldset>
     </form>
   );
 }
@@ -462,12 +485,14 @@ type Entry = {
 };
 
 function Entries({
+  editable,
   childId,
   category,
   entries,
   titlePlaceholder,
   contentPlaceholder,
 }: {
+  editable: boolean;
   childId: string;
   category: string;
   entries: Entry[];
@@ -531,6 +556,7 @@ function Entries({
 
   return (
     <div className="mt-4 space-y-4">
+      {editable && (
       <form
         className="surface space-y-4 p-6"
         onSubmit={(event) => {
@@ -563,6 +589,7 @@ function Entries({
           {t("entry.add")}
         </Button>
       </form>
+      )}
 
       {entries.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("entry.empty")}</p>}
       {entries.length > 0 && (
@@ -613,6 +640,7 @@ function Entries({
               </p>
             )}
           </div>
+          {editable && (
           <Button
             variant="ghost"
             size="icon"
@@ -623,6 +651,8 @@ function Entries({
           >
             <Pencil className="size-4" aria-hidden />
           </Button>
+          )}
+          {editable && (
           <Button
             variant="ghost"
             size="icon"
@@ -635,6 +665,7 @@ function Entries({
           >
             <Trash2 className="size-4" aria-hidden />
           </Button>
+          )}
         </article>
         ),
       )}
@@ -657,7 +688,7 @@ function Entries({
 
 type Task = { id: string; title: string; due_at: string | null; done: boolean };
 
-function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
+function TaskList({ childId, tasks, editable }: { childId: string; tasks: Task[]; editable: boolean }) {
   const queryClient = useQueryClient();
   const { t, locale } = usePrefs();
   const [title, setTitle] = useState("");
@@ -729,6 +760,7 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
 
   return (
     <div className="mt-4 space-y-4">
+      {editable && (
       <form
         className="surface grid gap-4 p-6 sm:grid-cols-[1fr_14rem_auto] sm:items-end"
         onSubmit={(event) => {
@@ -760,6 +792,7 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
           {t("entry.add")}
         </Button>
       </form>
+      )}
 
       {tasks.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("tasks.empty")}</p>}
       <ul className={tasks.length ? "surface divide-y divide-border overflow-hidden" : "hidden"}>
@@ -769,6 +802,7 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
             <li key={task.id} className="row flex items-center gap-3 px-5 py-3.5">
               <Checkbox
                 checked={task.done}
+                disabled={!editable}
                 onCheckedChange={() => toggle.mutate(task)}
                 aria-label={t("tasks.markDone")}
               />
@@ -781,15 +815,17 @@ function TaskList({ childId, tasks }: { childId: string; tasks: Task[] }) {
                   </span>
                 )}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={trashButton}
-                aria-label={t("entry.remove")}
-                onClick={() => remove.mutate(task)}
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </Button>
+              {editable && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={trashButton}
+                  aria-label={t("entry.remove")}
+                  onClick={() => remove.mutate(task)}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              )}
             </li>
           );
         })}
@@ -807,7 +843,17 @@ type Document = {
   created_at: string;
 };
 
-function Documents({ childId, documents }: { childId: string; documents: Document[] }) {
+function Documents({
+  childId,
+  ownerId,
+  documents,
+  editable,
+}: {
+  childId: string;
+  ownerId: string;
+  documents: Document[];
+  editable: boolean;
+}) {
   const queryClient = useQueryClient();
   const { t, locale } = usePrefs();
   const [uploading, setUploading] = useState(false);
@@ -823,7 +869,8 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user!.id;
-      const path = `${userId}/${childId}/${crypto.randomUUID()}-${file.name}`;
+      // Files live in the folder owner's area, also when a family member uploads them.
+      const path = `${ownerId}/${childId}/${crypto.randomUUID()}-${file.name}`;
       const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file);
       if (uploadError) throw uploadError;
       const { error } = await supabase.from("documents").insert({
@@ -882,6 +929,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
   return (
     <div className="mt-4 space-y-4">
       {/* One target for both ways in: click to browse, or drop a file on it. */}
+      {editable && (
       <label
         htmlFor="doc-upload"
         data-dragging={dragging || undefined}
@@ -924,6 +972,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
           }}
         />
       </label>
+      )}
 
       {documents.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("docs.empty")}</p>}
       <ul className={documents.length ? "surface divide-y divide-border overflow-hidden" : "hidden"}>
@@ -952,6 +1001,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
             >
               <Download className="size-4" aria-hidden />
             </Button>
+            {editable && (
             <Button
               variant="ghost"
               size="icon"
@@ -964,6 +1014,7 @@ function Documents({ childId, documents }: { childId: string; documents: Documen
             >
               <Trash2 className="size-4" aria-hidden />
             </Button>
+            )}
           </li>
         ))}
       </ul>

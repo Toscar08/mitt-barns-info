@@ -521,6 +521,66 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          label: string | null
+          role: string
+          token_hash: string
+          used_at: string | null
+          used_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          label?: string | null
+          role: string
+          token_hash: string
+          used_at?: string | null
+          used_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string | null
+          role?: string
+          token_hash?: string
+          used_at?: string | null
+          used_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      workspace_members: {
+        Row: {
+          created_at: string
+          label: string | null
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          label?: string | null
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          label?: string | null
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           activated_at: string
@@ -576,8 +636,20 @@ export type Database = {
       }
       claim_launch_trial: { Args: { target_user: string }; Returns: undefined }
       get_my_campaign_access: { Args: never; Returns: Json }
+      can_use_app: { Args: never; Returns: boolean }
+      family_role: { Args: { owner: string }; Returns: string }
       has_account_access: { Args: never; Returns: boolean }
       has_paid_access: { Args: { target_user: string }; Returns: boolean }
+      my_families: {
+        Args: never
+        Returns: {
+          active: boolean
+          family_name: string
+          owner_id: string
+          role: string
+          workspace_id: string
+        }[]
+      }
       pin_unlocked: { Args: never; Returns: boolean }
       has_role: {
         Args: {
