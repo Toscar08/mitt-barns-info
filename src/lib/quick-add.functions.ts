@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { canUseApp } from "@/lib/app-access";
+import { Redactor } from "@/lib/redact";
 import {
   CHILD_FIELDS,
   ENTRY_CATEGORIES,
@@ -106,6 +107,7 @@ function instructions(children: ChildRef[], today: string) {
     "- One fact per item. Split a note that holds several facts.",
     "- child is the number of the child the fact is about. If the note does not make that clear and there are several children, use null.",
     "- Write titles in the language of the note.",
+    "- Placeholders such as [BARN1] or [TEL1] stand for real names and phone numbers. Copy them exactly into values, titles and content where they belong.",
     '- If nothing in the note can be saved, reply {"items":[]}.',
     "",
     `Today's date: ${today}`,
@@ -137,6 +139,7 @@ export const sortQuickNote = createServerFn({ method: "POST" })
     if (!apiKey) return rules();
 
     try {
+      const redactor = new Redactor();
       const { createOpenAI } = await import("@ai-sdk/openai");
       const { streamText } = await import("ai");
       const lovable = createOpenAI({
@@ -158,10 +161,11 @@ export const sortQuickNote = createServerFn({ method: "POST" })
             store: false,
           },
         },
-        system: instructions(children, today),
-        prompt: data.text,
+        // The AI sees [BARN1] instead of a name, and placeholders for phone numbers and e-mail.
+        system: instructions(children.map((kid) => ({ ...kid, name: redactor.child(kid.name) })), today),
+        prompt: redactor.mask(data.text),
       });
-      const items = fromAi((await result.text).trim(), children);
+      const items = fromAi(redactor.restore((await result.text).trim()), children);
       // An unreadable reply is no reason to fail: the rules still file what they are sure about.
       return items ? { items, source: "ai" } : rules();
     } catch (error) {

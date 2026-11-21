@@ -86,9 +86,9 @@ export function parseIcs(text: string, from: number, to: number): Ev[] {
 
 async function syncChild(supabase: any, userId: string, childId: string, rawUrl: string) {
   const url = normalizeUrl(rawUrl);
-  const res = await fetch(url.toString(), { redirect: "follow", headers: { Accept: "text/calendar" } });
-  if (!res.ok) throw new Error("Kunde inte hämta kalendern. Kontrollera länken.");
-  const text = (await res.text()).slice(0, 3_000_000);
+  // Checks what the name points to, and every redirect, before anything is fetched.
+  const { fetchPublicText } = await import("@/lib/safe-fetch.server");
+  const text = await fetchPublicText(url, "text/calendar");
   if (!text.includes("BEGIN:VCALENDAR")) throw new Error("Länken är inte en kalender (.ics).");
   const now = Date.now();
   const events = parseIcs(text, now - 86400000, now + WINDOW_DAYS * 86400000);

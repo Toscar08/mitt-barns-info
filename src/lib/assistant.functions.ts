@@ -1,5 +1,6 @@
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { canUseApp } from "@/lib/app-access";
+import { Redactor } from "@/lib/redact";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -78,7 +79,10 @@ export const askAssistant = createServerFn({ method: "POST" })
         .filter((line) => line !== null)
         .join("\n");
     };
-    const contextText = list.map(build).join("\n");
+    // Names, phone numbers, e-mail and addresses leave as placeholders and come back in the answer.
+    const redactor = new Redactor();
+    for (const kid of list) redactor.child(kid.name);
+    const contextText = redactor.mask(list.map(build).join("\n"));
 
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
@@ -117,6 +121,7 @@ export const askAssistant = createServerFn({ method: "POST" })
           "- Do not restate the question, do not add preamble, lists or explanations.",
           "- You may combine facts from several parts of the folder, but keep the answer short.",
           "- Understand natural language: match the meaning even if the wording differs from the folder.",
+          "- Placeholders such as [BARN1], [TEL2], [EPOST1], [PNR1] or [ADRESS1] stand for real names, phone numbers, e-mail addresses, ID numbers and addresses. Write them exactly as they appear when they belong in the answer; never guess what they hide.",
           `- If the answer is not in the folder, reply exactly: "${NOT_FOUND[lang]}" and nothing else.`,
           lang === "sv"
             ? "- If asked for a personal ID or passport number that is marked as stored, say it is kept in the child's folder under Personuppgifter. Never invent one."
@@ -129,10 +134,10 @@ export const askAssistant = createServerFn({ method: "POST" })
           "=== CHILD FOLDER CONTENT ===",
           contextText,
         ].join("\n"),
-        prompt: data.question,
+        prompt: redactor.mask(data.question),
       });
 
-      const answer = (await result.text).trim();
+      const answer = redactor.restore((await result.text).trim()).trim();
       return { answer: answer || NOT_FOUND[lang] };
     } catch (error) {
       console.error("assistant error", error);
