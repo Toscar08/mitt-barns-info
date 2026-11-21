@@ -12,3 +12,4 @@
 - [ ] Owner adds STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET and points the Stripe webhook at /api/public/stripe-webhook.
 - [x] Monthly (39 kr) and yearly (349 kr) subscriptions via Stripe Checkout, invoice.paid webhook and billing portal (migration 0006).
 - [ ] Apply migration 0006 and enable the Stripe customer portal (cancel + switch plan) in the Stripe dashboard; subscribe the webhook to invoice.paid.
+- [ ] Apply migration 0007 (server-enforced PIN lock) after 0006.

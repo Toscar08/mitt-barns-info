@@ -338,6 +338,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pin_devices: {
+        Row: {
+          created_at: string
+          id: string
+          last_used_at: string | null
+          secret_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          secret_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          secret_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pin_unlocks: {
+        Row: {
+          created_at: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           child_id: string
@@ -532,6 +577,8 @@ export type Database = {
       claim_launch_trial: { Args: { target_user: string }; Returns: undefined }
       get_my_campaign_access: { Args: never; Returns: Json }
       has_account_access: { Args: never; Returns: boolean }
+      has_paid_access: { Args: { target_user: string }; Returns: boolean }
+      pin_unlocked: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

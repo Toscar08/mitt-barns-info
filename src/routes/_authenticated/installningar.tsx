@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/AppHeader";
-import { PrivateGate, useWorkspace } from "@/components/PrivateGate";
+import { PrivateGate, rememberUnlocked, useWorkspace } from "@/components/PrivateGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,7 +98,13 @@ function SettingsPage() {
   }
 
   async function submitPin(remove: boolean) {
-    await savePin({ data: { pin: remove ? "" : pin } });
+    try {
+      await savePin({ data: { pin: remove ? "" : pin } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+      return;
+    }
+    if (!remove && ws) rememberUnlocked(ws.id);
     setPinValue("");
     await queryClient.invalidateQueries({ queryKey: ["workspace"] });
     toast.success(remove ? (sv ? "PIN-kod borttagen" : "PIN removed") : sv ? "PIN-kod sparad" : "PIN saved");

@@ -50,6 +50,13 @@
       "when": 1794930596164,
       "tag": "0006_subscription_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795276030315,
+      "tag": "0007_server_pin_lock",
+      "breakpoints": true
     }
   ]
 }

@@ -8,7 +8,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { AskBar } from "@/components/AskBar";
 import { PrivateGate, useWorkspace } from "@/components/PrivateGate";
 import { askAssistant } from "@/lib/assistant.functions";
-import { biometricEnrolled, biometricSupported, enrollBiometric } from "@/lib/biometric";
+import { biometricEnrolled, biometricSupported, enrollBiometric, removeBiometric, saveBiometricSecret } from "@/lib/biometric";
+import { registerUnlockDevice } from "@/lib/workspace.functions";
 import { useChildren } from "@/lib/children";
 import { usePrefs } from "@/lib/prefs";
 
@@ -42,6 +43,7 @@ function AskPage() {
   const { lang, t } = usePrefs();
   const sv = lang === "sv";
   const ask = useServerFn(askAssistant);
+  const registerDevice = useServerFn(registerUnlockDevice);
   const workspace = useWorkspace();
   const children = useChildren();
   const noChildren = children.data?.length === 0;
@@ -83,6 +85,14 @@ function AskPage() {
     if (!ws) return;
     try {
       if (await enrollBiometric(ws.id, ws.displayName || "Barnmappen")) {
+        // The server must know this device too, or Face ID could not unlock the folders.
+        try {
+          const { secret } = await registerDevice();
+          if (secret) saveBiometricSecret(ws.id, secret);
+        } catch (error) {
+          removeBiometric();
+          throw error;
+        }
         setCanBio(false);
         toast.success(sv ? "Face ID / fingeravtryck är på." : "Face ID / fingerprint enabled.");
       }

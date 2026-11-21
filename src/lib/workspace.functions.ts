@@ -96,6 +96,9 @@ export const setPin = createServerFn({ method: "POST" })
     z.object({ pin: z.string().regex(/^\d{4,8}$/).or(z.literal("")) }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Changing or removing an existing PIN needs an unlocked session, or a stolen session could
+    // simply replace the PIN and walk in.
+    if ((await lockState(context.supabase)) === "locked") throw new Error("Lås upp med din PIN-kod först.");
     const { hashPin } = await import("@/lib/pin.server");
     const pin_hash = data.pin ? await hashPin(data.pin) : null;
     const { error } = await context.supabase
@@ -103,8 +106,24 @@ export const setPin = createServerFn({ method: "POST" })
       .update({ pin_hash })
       .eq("owner_id", context.userId);
     if (error) throw new Error(error.message);
+    // Old unlocks and Face ID devices belonged to the old PIN. This session stays open.
+    const session = await import("@/lib/pin-session.server");
+    await session.forgetAllUnlocks(context.userId);
+    if (pin_hash) await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
     return { ok: true as const, hasPin: Boolean(pin_hash) };
   });
+
+/**
+ * "open" when the database lets this session at the folders, "locked" when the PIN is needed,
+ * "legacy" before migration 0007, when the database does not enforce the PIN at all.
+ */
+async function lockState(supabase: {
+  rpc: (fn: "pin_unlocked") => PromiseLike<{ data: boolean | null; error: { code?: string } | null }>;
+}): Promise<"open" | "locked" | "legacy"> {
+  const { data, error } = await supabase.rpc("pin_unlocked");
+  if (error) return "legacy";
+  return data ? "open" : "locked";
+}
 
 export const unlockWithPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -112,7 +131,55 @@ export const unlockWithPin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { attemptPin } = await import("@/lib/pin-attempt.server");
     const result = await attemptPin(context.userId, data.pin);
-    return result.ok ? { ok: true as const } : { ok: false as const, locked: result.locked };
+    if (!result.ok) return { ok: false as const, locked: result.locked };
+    const session = await import("@/lib/pin-session.server");
+    await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    return { ok: true as const };
+  });
+
+/** Where the lock stands for this session. The lock screen trusts this, not the browser. */
+export const pinStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => ({ state: await lockState(context.supabase) }));
+
+/** Called while the parent is active, so the unlock does not run out mid-use. */
+export const keepUnlocked = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const session = await import("@/lib/pin-session.server");
+    await session.extendUnlock(context.userId, session.sessionIdOf(context.claims));
+    return { state: await lockState(context.supabase) };
+  });
+
+/** Locks this session right away, e.g. after the app has been left idle. */
+export const lockNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const session = await import("@/lib/pin-session.server");
+    await session.revokeUnlock(context.userId, session.sessionIdOf(context.claims));
+    return { ok: true as const };
+  });
+
+/** Gives this device a secret for Face ID / fingerprint unlock. Only from an unlocked session. */
+export const registerUnlockDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const state = await lockState(context.supabase);
+    if (state === "locked") throw new Error("Lås upp med din PIN-kod först.");
+    if (state === "legacy") return { secret: null };
+    const { registerDevice } = await import("@/lib/pin-session.server");
+    return { secret: await registerDevice(context.userId) };
+  });
+
+/** Unlocks after the device has confirmed Face ID / fingerprint, using the secret it was given. */
+export const unlockWithDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ secret: z.string().regex(/^[0-9a-f]{64}$/) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const session = await import("@/lib/pin-session.server");
+    if (!(await session.deviceBelongsTo(context.userId, data.secret))) return { ok: false as const };
+    await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    return { ok: true as const };
   });
 
 export const myActivationCode = createServerFn({ method: "GET" })

@@ -1,6 +1,7 @@
 // Device biometric unlock (Face ID / fingerprint) via WebAuthn platform authenticator.
-// This is a local convenience gate on top of the signed-in account session; the
-// credential id is stored per device and never leaves it except as a WebAuthn request.
+// The device confirms the person; the server then unlocks the session with a device secret it
+// handed out when Face ID was turned on (see registerUnlockDevice). The credential id never leaves
+// the device except as a WebAuthn request.
 const KEY = "barnmappen.biometric";
 
 function rand(n: number) {
@@ -29,6 +30,25 @@ export function biometricEnrolled(workspaceId: string) {
     return v?.ws === workspaceId ? (v.id as string) : null;
   } catch {
     return null;
+  }
+}
+
+/** The server-issued secret that turns a confirmed Face ID into an unlocked session. */
+export function biometricSecret(workspaceId: string) {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) || "null");
+    return v?.ws === workspaceId && typeof v.secret === "string" ? (v.secret as string) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveBiometricSecret(workspaceId: string, secret: string) {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (v?.ws === workspaceId) localStorage.setItem(KEY, JSON.stringify({ ...v, secret }));
+  } catch {
+    // Without the secret the device simply falls back to the PIN.
   }
 }
 
