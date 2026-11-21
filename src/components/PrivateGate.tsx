@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Fingerprint, LockKeyhole } from "lucide-react";
+import { Fingerprint, LoaderCircle, LockKeyhole } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [bioId, setBioId] = useState<string | null>(null);
   const server = useRef<ServerLock>("legacy");
@@ -122,8 +123,9 @@ export function PrivateGate({ children }: { children: ReactNode }) {
     }
     let cancelled = false;
     setChecking(true);
-    void fetchStatus()
-      .then(({ state }) => state as ServerLock)
+    // Never leaves the parent waiting: no answer within a few seconds counts as the old behaviour.
+    const timeout = new Promise<ServerLock>((resolve) => setTimeout(() => resolve("legacy"), 6000));
+    void Promise.race([fetchStatus().then(({ state }) => state as ServerLock), timeout])
       .catch((): ServerLock => "legacy")
       .then((state) => {
         if (cancelled) return;
@@ -206,6 +208,7 @@ export function PrivateGate({ children }: { children: ReactNode }) {
     event.preventDefault();
     setBusy(true);
     setError(false);
+    setFailed(false);
     try {
       const res = await unlock({ data: { pin } });
       if (res.ok) {
@@ -215,6 +218,10 @@ export function PrivateGate({ children }: { children: ReactNode }) {
         setLocked("locked" in res && !!res.locked);
         setPin("");
       }
+    } catch (problem) {
+      // Shown instead of silently doing nothing, so a server problem is not mistaken for a wrong code.
+      console.error("unlock failed", problem);
+      setFailed(true);
     } finally {
       setBusy(false);
     }
@@ -250,7 +257,13 @@ export function PrivateGate({ children }: { children: ReactNode }) {
         {error && (
           <p className="text-sm text-destructive" role="alert">{locked ? (sv ? "För många fel försök. Koden är spärrad en stund – försök igen senare." : "Too many wrong attempts. The code is locked for a while – try again later.") : sv ? "Fel kod." : "Wrong code."}</p>
         )}
+        {failed && (
+          <p className="text-sm text-destructive" role="alert">
+            {sv ? "Koden kunde inte kontrolleras just nu. Kontrollera anslutningen och försök igen." : "The code couldn't be checked right now. Check your connection and try again."}
+          </p>
+        )}
         <Button type="submit" className="w-full" disabled={busy || pin.length < 4}>
+          {busy && <LoaderCircle className="animate-spin" aria-hidden />}
           {sv ? "Lås upp" : "Unlock"}
         </Button>
       </form>

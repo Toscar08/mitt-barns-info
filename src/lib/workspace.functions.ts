@@ -107,9 +107,14 @@ export const setPin = createServerFn({ method: "POST" })
       .eq("owner_id", context.userId);
     if (error) throw new Error(error.message);
     // Old unlocks and Face ID devices belonged to the old PIN. This session stays open.
-    const session = await import("@/lib/pin-session.server");
-    await session.forgetAllUnlocks(context.userId);
-    if (pin_hash) await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    // Never lets the bookkeeping of the new lock undo a PIN that has already been saved.
+    try {
+      const session = await import("@/lib/pin-session.server");
+      await session.forgetAllUnlocks(context.userId);
+      if (pin_hash) await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    } catch (error) {
+      console.error("pin lock: session bookkeeping failed", error);
+    }
     return { ok: true as const, hasPin: Boolean(pin_hash) };
   });
 
@@ -132,8 +137,13 @@ export const unlockWithPin = createServerFn({ method: "POST" })
     const { attemptPin } = await import("@/lib/pin-attempt.server");
     const result = await attemptPin(context.userId, data.pin);
     if (!result.ok) return { ok: false as const, locked: result.locked };
-    const session = await import("@/lib/pin-session.server");
-    await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    // A correct PIN is a correct PIN: recording the unlock must not turn it into a failure.
+    try {
+      const session = await import("@/lib/pin-session.server");
+      await session.grantUnlock(context.userId, session.sessionIdOf(context.claims));
+    } catch (error) {
+      console.error("pin lock: grant failed", error);
+    }
     return { ok: true as const };
   });
 
